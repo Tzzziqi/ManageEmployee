@@ -6,32 +6,32 @@ const mongoose = require('mongoose');
 
 const validateInviteToken = async (req, res, next) => {
     try {
-        const { token } = req.params;
-        const tokenInfo = await RegistrationToken.findOne({ token: token });
+        const { inviteToken } = req.params;
+        const inviteTokenInfo = await RegistrationToken.findOne({ inviteToken: inviteToken });
 
-        if (!tokenInfo || tokenInfo.expirationDate < new Date()) {
+        if (!inviteTokenInfo || inviteTokenInfo.expirationDate < new Date()) {
             return generateResponse(res, 400, "The link is no longer valid.");
         }
 
-        if (tokenInfo.status === "used") {
+        if (inviteTokenInfo.status === "used") {
             return generateResponse(res, 400, "The link has already been used.");
         }
 
-        if (tokenInfo.status === "revoked") {
+        if (inviteTokenInfo.status === "revoked") {
             return generateResponse(res, 400, "The link has already been revoked by an administrator.");
         }
 
-        req.tokenInfo = tokenInfo;
+        req.inviteTokenInfo = inviteTokenInfo;
         next();
 
     } catch (error) {
-        console.error("Token validation error:", error);
+        console.error("Invite token validation error:", error);
         next(error);
     }
 }
 
 const register = async (req, res, _next) => {
-    const { token, email, role } = req.tokenInfo;
+    const { inviteToken, email, role } = req.inviteTokenInfo;
     const { username, password } = req.body;
 
     if (!password || password.length < 8) {
@@ -59,7 +59,7 @@ const register = async (req, res, _next) => {
 
     try {
         const [newUser] = await User.create([{ username, email, password, role }], { session });
-        await RegistrationToken.updateOne({ token }, { status: 'used' }, { session });
+        await RegistrationToken.updateOne({ inviteToken }, { status: 'used' }, { session });
         await session.commitTransaction();
         const jwtToken = generateJWTToken(newUser);
         const responseData = generateUserResponseData(newUser, jwtToken);

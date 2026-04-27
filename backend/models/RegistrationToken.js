@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 
 const RegistrationTokenSchema = new mongoose.Schema({
-    token: {
+    inviteToken: {
         type: String,
         required: true,
         unique: true,

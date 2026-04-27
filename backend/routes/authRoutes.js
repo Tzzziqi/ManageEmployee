@@ -4,9 +4,9 @@ const { validateInviteToken, register } = require('../controllers/registerContro
 const { generateResponse } = require("../utils/responseHandler");
 
 // for public w/ token
-router.get('/validateInvite/:token', validateInviteToken, (req, res) => generateResponse(res, 200, "The token is valid"));
+router.get('/validateInvite/:inviteToken', validateInviteToken, (req, res) => generateResponse(res, 200, "The invite token is valid"));
 
-router.post('/register/:token', validateInviteToken, register);
+router.post('/register/:inviteToken', validateInviteToken, register);
 
 
 // for private user
