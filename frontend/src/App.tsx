@@ -1,11 +1,18 @@
 // placeHolder, tailwindcss
+import { Route, Routes } from "react-router-dom";
+import VerifyInvitePage from "./pages/VerifyInvitePage.tsx";
+import RegistrationPage from "./pages/RegistrationPage.tsx";
+
 function App() {
-  return (
-    <div className="flex items-center justify-center h-screen bg-blue-100">
-      <h1 className="text-3xl font-bold text-blue-600">
-        Tailwind WORKING IIIINNNGG
-      </h1>
-    </div>
-  )
+    return (
+        <div>
+            <Routes>
+                <Route path="/WelecomeToChuwa/:inviteToken" element={ <VerifyInvitePage/> }/>
+                <Route path="/register/*" element={ <RegistrationPage/> }/>
+            </Routes>
+        </div>
+
+    )
 }
+
 export default App
