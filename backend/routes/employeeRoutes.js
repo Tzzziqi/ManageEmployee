@@ -12,7 +12,11 @@ const employeeOrHR = [authMiddleware, requireRole('employee', 'hr')];
 
 router.get('/profile',                    ...employeeOrHR, getProfile);
 router.put('/profile/address',            ...employeeOrHR, updateAddress);
-router.put('/profile/emergency-contacts', ...employeeOrHR, updateEmergencyContact);
+router.put('/profile/emergency',          ...employeeOrHR, updateEmergencyContact);
+
+router.put('/profile/name',               ...employeeOrHR, updateName);
+router.put('/profile/contact',            ...employeeOrHR, updateContact);
+router.put('/profile/employment',         ...employeeOrHR, updateEmployment);
 
 router.post('/documents/upload-url',      ...employeeOrHR, getUploadUrl);
 router.post('/documents/confirm',         ...employeeOrHR, confirmUpload);

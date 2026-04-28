@@ -19,9 +19,58 @@ const getProfile = async(req, res) => {
         if( !employee) return res.status(404).json({ message: 'Profile not Found'});
         res.json(employee); // 200 ok and return employee data
     } catch (error) {
-        res.status(500).json({ message: err.message });
+        res.status(500).json({ message: error.message });
     }
 };
+
+const updateName = async (req, res) => {
+    try {
+        const { firstName, lastName, middleName, preferredName } = req.body;
+        if (!firstName || !lastName) {
+            return res.status(400).json({ message: 'First name and last name are required' });
+        }
+        const employee = await Employee.findOneAndUpdate(
+            { userId: req.user._id },
+            { firstName, lastName, middleName, preferredName },
+            { new: true }
+        );
+        res.json({ message: 'Name updated', data: { firstName, lastName, middleName, preferredName } });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+const updateContact = async (req, res) => {
+    try {
+        const { cellPhone, workPhone } = req.body;
+        if (!cellPhone) {
+            return res.status(400).json({ message: 'Cell phone is required' });
+        }
+        const employee = await Employee.findOneAndUpdate(
+            { userId: req.user._id },
+            { cellPhone, workPhone },
+            { new: true }
+        );
+        res.json({ message: 'Contact updated', data: { cellPhone, workPhone } });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+const updateEmployment = async (req, res) => {
+    try {
+        const { visaTitle, visaStart, visaEnd } = req.body;
+        const employee = await Employee.findOneAndUpdate(
+            { userId: req.user._id },
+            { visaTitle, visaStart, visaEnd },
+            { new: true }
+        );
+        res.json({ message: 'Employment updated', data: { visaTitle, visaStart, visaEnd } });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 
 // Only update the Address. 
 const updateAddress = async (req, res) => {
@@ -31,13 +80,13 @@ const updateAddress = async (req, res) => {
             return res.status(400).json({message: 'Street, city, state, zip are required'});
         }
         const employee = await Employee.findOneAndUpdate(
-            {userId: req.user.Id },
+            {userId: req.user._id },
             {address: { building, street, city, state, zip }},
             {new: true, runValidators: true } // runValidators is from Mongoose, it will run the validation rules defined in the schema when updating.
         );
         // only return address updated to UI coz the Minimal return principlle, reduce newtwork transfer. 
         res.json({ message: 'Address updated', address: employee.address })
-    } catch (error) { res.status(500).json({ message: err.message }); 
+    } catch (error) { res.status(500).json({ message: error.message }); 
 }
     };
 
@@ -45,17 +94,17 @@ const updateAddress = async (req, res) => {
 const updateEmergencyContact = async (req, res) => {
     try {
         const { emergencyContacts } = req.body;
-        if (!emergcyContacts || emergencyCoontacts.length === 0) {
+        if (!emergencyContacts || emergencyContacts.length === 0) {
             return res.status(400).json({message: 'At least 1 emergncy contact required'});
         }
-        const employee = await Employess.findOneAndUpdate(
+        const employee = await Employee.findOneAndUpdate(
             {userId: req.user._id},
             {emergencyContacts: emergencyContacts},
             {new:true}
         );
         res.json({ message: 'Emergency Contacts Upadted', emergencyContacts: employee.emergencyContacts });
     } catch(error) {
-        res.status(500).json({ message: err.message})
+        res.status(500).json({ message: error.message})
     }
 }
 
@@ -68,7 +117,7 @@ const getUploadUrl = async (req, res) => {
         // PutObjectCommand = instruction for "I want to PUT a file to S3"
         // Not uploaded yet — just describes a future operation
         const command = new PutObjectCommand ({
-            Bucket: process.env.AWS.BUCKET_NAME,
+            Bucket: process.env.AWS_BUCKET_NAME,
             Key: fileKey,
             ContentType: fileType // e.g 'image/jpeg'
         });
@@ -76,39 +125,39 @@ const getUploadUrl = async (req, res) => {
         const uploadUrl = await getSignedUrl(s3, command, { expiresIn: 900 });  // URL expires in 15mins
         res.json({ uploadUrl, fileKey}); // return two things to frondend
     } catch (error) {
-        res.status(500).json({ message: err.message});
+        res.status(500).json({ message: error.message});
     }; }
 
 // Step2: After file is uploaded to S3, save the file info to MongoDB
 const confirmUpload = async (req, res) => {
     try {
         const {fileKey, docType} = req.body;
-        const employess = await Employee.findOne({userId: req.uer._id });
-        const optOrder = ['OptReceipt', 'OPT_EAD', 'I1983', 'I20'];
+        const employee = await Employee.findOne({ userId: req.user._id }); 
+        const optOrder = ['OPT_RECEIPT', 'OPT_EAD', 'I983', 'I20'];
         const idx = optOrder.indexOf(docType);
         // opt recipt do not need to be approved, idx=== -1 means docType not in optOrder,do not need check. 
         if(idx > 0) {
-            const preDoc = await document.findOne({
+            const preDoc = await Document.findOne({
                 employeeId: employee._id,
                 type: optOrder[idx - 1],  
-                status: 'approved'  
+                status: 'approved'   
             });
             if (!preDoc) {
-                return res.status(400).json({message: `Please wit for ${optOrder[idx-1]} to be approved first`});
+                return res.status(400).json({message: `Please wait for ${optOrder[idx-1]} to be approved first`});
             }
         }
         const fileUrl = `https://${process.env.AWS_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${fileKey}`;
         // create a new doc to track the file info in MongoDB, to tell HR,  initial status is pending 
-        const doc = await document.create({
+        const doc = await Document.create({
             employeeId: employee._id,
             type: docType,
             fileUrl,
             fileKey,
-            status: 'Pending'
+            status: 'pending'
         });
         res.json({message: `Document uploaded, waiting for HR approval`, document: doc});
     } catch (error) { 
-        res.status(500).json({ message: err.message });
+        res.status(500).json({ message: error.message });
     }
 }
 
@@ -120,7 +169,7 @@ const getVisaStatus = async (req, res) => {
         }
         const docs = await Document.find({
             employeeId: employee._id,
-            type: { $in: ['OptReceipt', 'OPT_EAD', 'I983', 'I20'] }
+            type: { $in: ['OPT_RECEIPT', 'OPT_EAD', 'I983', 'I20'] }
         });
         // Transform the docs array into a map so you can use key:value to get doc info. 
         const docMap = {};
@@ -128,16 +177,24 @@ const getVisaStatus = async (req, res) => {
 
         res.json({
             isOPT: true,
-            OptReceipt: docMap['OptReceipt'] || null,
+            OPT_RECEIPT: docMap['OPT_RECEIPT'] || null,
             OPT_EAD: docMap['OPT_EAD'] || null,
             I983: docMap['I983'] || null,
             I20: docMap['I20'] || null
         });
     } catch(error) {
-        res.status(500).json({ message: err.message });
+        res.status(500).json({ message: error.message });
     }
 }
 
 module.exports = {
-    getProfile, updateAddress, updateEmergencyContact, getUploadUrl, confirmUpload, getVisaStatus
-}
+    getProfile,
+    updateName,
+    updateAddress,
+    updateContact,
+    updateEmergencyContact,
+    updateEmployment,
+    getUploadUrl,
+    confirmUpload,
+    getVisaStatus
+};
