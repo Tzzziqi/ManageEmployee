@@ -11,6 +11,7 @@ mongoose.connect(process.env.MONGODB_URI)
     .catch(err => console.error('MongoDB connection failed: ', err));
 
 const authRouter = require('./routes/authRoutes');
+const employeeRoutes = require('./routes/employeeRoutes');
 
 const app = express();
 
@@ -21,6 +22,8 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/api/auth', authRouter);
+app.use('/api/employee', employeeRoutes); // protected by authMidd + roleMidd
+
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
@@ -37,5 +40,8 @@ app.use(function(err, req, res, _next) {
         error: req.app.get('env') === 'development' ? err : {}
     });
 });
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`HEY Server running on http://localhost:${PORT}`));
 
 module.exports = app;
