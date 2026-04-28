@@ -1,10 +1,10 @@
 // Documnet.js to track who's docs belong to who and the status, location and type
 
-const mongoose = reqiure('mongoose');
+const mongoose = require('mongoose');
 
 const DocumentSchema = new mongoose.Schema({
     employeeId: {
-        type: mongoose.Shema.Type.ObjectId,
+        type: mongoose.Schema.Types.ObjectId,
         ref: 'Employee',
         required: true,
     },
