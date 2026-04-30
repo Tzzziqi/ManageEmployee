@@ -2,6 +2,9 @@ import { combineReducers, configureStore } from '@reduxjs/toolkit';
 import { FLUSH, PAUSE, PERSIST, persistReducer, persistStore, PURGE, REGISTER, REHYDRATE, } from 'redux-persist';
 import inviteReducer from './slices/inviteSlice'
 
+import profileReducer from './slices/profileSlice';
+import visaReducer    from './slices/visaSlice';  
+
 const storage = {
     getItem: (key: string) => Promise.resolve(localStorage.getItem(key)),
     setItem: (key: string, value: string) => Promise.resolve(localStorage.setItem(key, value)),
@@ -10,6 +13,8 @@ const storage = {
 
 const rootReducer = combineReducers({
     invite: inviteReducer,
+    profile: profileReducer, 
+    visa: visaReducer, 
 });
 
 const persistConfig = {

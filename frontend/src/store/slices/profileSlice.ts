@@ -7,7 +7,7 @@ export const fetchProfile = createAsyncThunk(
     'profile/fetch', // action type, it's a redux id, so later can put on the three actions: P,F,R.
     async (_, {rejectWithValue}) => {
         try{
-            const res = await api.get('api/employee/profile');
+            const res = await api.get('/employee/profile');
             return res.data;
         } catch(error: any) {
             // rejectWithValue: manually control what gets stored on rejection
@@ -23,7 +23,7 @@ export const updateAddress = createAsyncThunk(
     // any for now. need change to 'interface AddDTO later when confirm backend data structure'
     async (addressData: any, {rejectWithValue }) => {
         try {
-            const res = await api.put('/api/employee/profile/address', addressData);
+            const res = await api.put('/employee/profile/address', addressData);
             return res.data;
         // can use any here, coz need it for access .response
         } catch(error: any) {
@@ -35,7 +35,7 @@ export const updateName = createAsyncThunk(
   'profile/updateName',                         
   async (nameData: any, { rejectWithValue }) => {
     try {
-      const res = await api.put('/api/employee/profile/name', nameData);  
+      const res = await api.put('/employee/profile/name', nameData);  
       return res.data;
     } catch (err: any) {
       return rejectWithValue(err.response?.data?.message);
@@ -47,7 +47,7 @@ export const updateContact = createAsyncThunk(
   'profile/updateContact',                          
   async (contactData: any, { rejectWithValue }) => {
     try {
-      const res = await api.put('/api/employee/profile/contact', contactData);  
+      const res = await api.put('/employee/profile/contact', contactData);  
       return res.data;
     } catch (err: any) {
       return rejectWithValue(err.response?.data?.message);
@@ -59,7 +59,7 @@ export const updateEmployment = createAsyncThunk(
   'profile/updateEmployment',                          
   async (employmentData: any, { rejectWithValue }) => {
     try {
-      const res = await api.put('/api/employee/profile/employment', employmentData); 
+      const res = await api.put('/employee/profile/employment', employmentData); 
       return res.data;
     } catch (err: any) {
       return rejectWithValue(err.response?.data?.message);
@@ -72,14 +72,13 @@ export const updateEmergencyContact = createAsyncThunk(
   'profile/updateEmergencyContact',
   async (emergencyData: any, { rejectWithValue }) => {
     try {
-      const res = await api.put('/api/employee/profile/emergency', emergencyData);
+      const res = await api.put('/employee/profile/emergency', emergencyData);
       return res.data;
     } catch (err: any) {
       return rejectWithValue(err.response?.data?.message);
     }
   }
 );
-
 // ── initialState define, clear the bug ──
 interface ProfileState {
   data: any;

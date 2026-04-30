@@ -5,6 +5,7 @@ const authMiddleware = require('../middlewares/authMiddleware');
 const requireRole  = require('../middlewares/roleMiddleware');
 const {
   getProfile, updateAddress, updateEmergencyContact,
+  updateName, updateContact, updateEmployment,
   getUploadUrl, confirmUpload, getVisaStatus
 } = require('../controllers/employeeController');
 
