@@ -14,12 +14,9 @@ const storage = {
 
 const rootReducer = combineReducers({
     invite: inviteReducer,
-<<<<<<< HEAD
     auth: authReducer,
-=======
-    profile: profileReducer, 
-    visa: visaReducer, 
->>>>>>> feature/employee
+    profile: profileReducer,
+    visa: visaReducer
 });
 
 const persistConfig = {
@@ -31,7 +28,6 @@ const persistConfig = {
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
 
-// 4. 設定 Store
 export const store = configureStore({
     reducer: persistedReducer,
     middleware: (getDefaultMiddleware) =>
