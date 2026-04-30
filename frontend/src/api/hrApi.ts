@@ -58,10 +58,15 @@ export const getApplicationsByStatus = async (
 };
 
 export const searchEmployeeProfiles = async (
-  keyword: string
-): Promise<EmployeeSearchResponse> => {
-  const response = await axios.get(`${API_BASE_URL}/employees/search`, {
-    params: { keyword },
+  keyword: string,
+  page: number = 1
+) => {
+  const response = await axios.get(`${API_BASE_URL}/employees`, {
+    params: {
+      keyword,
+      page,
+      limit: 5,
+    },
   });
 
   return response.data;

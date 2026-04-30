@@ -9,6 +9,7 @@ import {
 
 import HRSidebar from "../components/HRSidebar";
 import OnboardingCard from "../components/OnboardingCard";
+import Pagination from "../components/Pagination"; 
 
 const HRApplicationsPage = () => {
   const getInitialPage = () => {
@@ -166,27 +167,11 @@ const HRApplicationsPage = () => {
                 ))}
               </div>
 
-              <div className="mt-6 flex items-center justify-center gap-3">
-                <button
-                  disabled={page === 1}
-                  onClick={() => setPage(page - 1)}
-                  className="rounded-lg border bg-white px-4 py-2 disabled:opacity-50"
-                >
-                  Prev
-                </button>
-
-                <span className="px-4 py-2">
-                  Page {page} / {totalPages}
-                </span>
-
-                <button
-                  disabled={page === totalPages}
-                  onClick={() => setPage(page + 1)}
-                  className="rounded-lg border bg-white px-4 py-2 disabled:opacity-50"
-                >
-                  Next
-                </button>
-              </div>
+              <Pagination
+                page={page}
+                totalPages={totalPages}
+                onPageChange={setPage}
+              />
             </>
           )}
         </div>
