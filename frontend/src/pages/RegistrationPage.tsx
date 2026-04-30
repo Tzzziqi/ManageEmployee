@@ -12,7 +12,7 @@ interface FormValues {
     password: string,
 }
 
-const RegisterPage = () => {
+const RegistrationPage = () => {
     const [form] = Form.useForm();
     const dispatch = useDispatch<AppDispatch>();
     const { inviteToken } = useParams<{ inviteToken: string }>();
@@ -130,4 +130,4 @@ const RegisterPage = () => {
     );
 };
 
-export default RegisterPage;
+export default RegistrationPage;

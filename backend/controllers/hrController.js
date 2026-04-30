@@ -1,15 +1,15 @@
-const OnboardingApplication = require("../models/OnboardingApplication");
+const Onboarding = require("../models/Onboarding");
 
 const getAllApplications = async (req, res) => {
   try {
-    const applications = await OnboardingApplication.find()
+    const applications = await Onboarding.find()
       .populate("user", "username email role")
       .sort({ createdAt: -1 });
 
     res.status(200).json(applications);
   } catch (error) {
     res.status(500).json({
-      message: "Failed to get onboarding applications",
+      message: "Failed to get onboarding",
       error: error.message,
     });
   }
@@ -25,7 +25,7 @@ const getApplicationsByStatus = async (req, res) => {
       });
     }
 
-    const applications = await OnboardingApplication.find({ status })
+    const applications = await Onboarding.find({ status })
       .populate("user", "username email role")
       .sort({ createdAt: -1 });
 
@@ -42,7 +42,7 @@ const approveApplication = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const application = await OnboardingApplication.findById(id);
+    const application = await Onboarding.findById(id);
 
     if (!application) {
       return res.status(404).json({
@@ -77,7 +77,7 @@ const rejectApplication = async (req, res) => {
       });
     }
 
-    const application = await OnboardingApplication.findById(id);
+    const application = await Onboarding.findById(id);
 
     if (!application) {
       return res.status(404).json({
