@@ -42,6 +42,6 @@ app.use(function(err, req, res, _next) {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`HEY Server running on http://localhost:${PORT}`));
+// app.listen(PORT, () => console.log(`HEY Server running on http://localhost:${PORT}`));
 
 module.exports = app;
