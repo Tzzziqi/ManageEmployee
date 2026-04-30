@@ -1,17 +1,42 @@
-import { Button, Card, Form, Input, Typography } from 'antd';
+import { Button, Card, Form, Input, message, Typography } from 'antd';
 import { LockOutlined, UserOutlined } from '@ant-design/icons';
+import type { AppDispatch, RootState } from "../store/store";
+import { useDispatch, useSelector } from "react-redux";
+import { signup } from "../store/slices/authSlice.ts";
+import { useNavigate, useParams } from "react-router-dom";
 
 const { Title, Text } = Typography;
 
+interface FormValues {
+    username: string,
+    password: string,
+}
+
 const RegisterPage = () => {
     const [form] = Form.useForm();
+    const dispatch = useDispatch<AppDispatch>();
+    const { inviteToken } = useParams<{ inviteToken: string }>();
+    const navigate = useNavigate();
 
-    interface RegisterFormValues {
-        username?: string;
-        email?: string;
-        password?: string;
-        confirm?: string;
-    }
+    const { status } = useSelector((state: RootState) => state.auth);
+
+    const onFinish = async (values: FormValues) => {
+        try {
+            console.log('Received values of form: ', values);
+            const signUpProps = {
+                inviteToken: inviteToken || '',
+                userData: values,
+            }
+
+            await dispatch(signup(signUpProps)).unwrap();
+
+            message.success('Registration successful! Please log in.')
+            navigate('/signin');
+
+        } catch (error) {
+            message.error((error as string) || 'Registration failed. Please reach out with the HR.');
+        }
+    };
 
     return (
         <div style={ {
@@ -37,6 +62,7 @@ const RegisterPage = () => {
                     form={ form }
                     name="register"
                     layout="vertical"
+                    onFinish={onFinish}
                     scrollToFirstError
                 >
                     <Form.Item
@@ -66,7 +92,6 @@ const RegisterPage = () => {
                         />
                     </Form.Item>
 
-                    {/* 確認密碼 */ }
                     <Form.Item
                         name="confirm"
                         label="Confirm Password"
@@ -91,13 +116,13 @@ const RegisterPage = () => {
                     </Form.Item>
 
                     <Form.Item style={ { marginTop: '32px' } }>
-                        <Button type="primary" htmlType="submit" size="large" block style={ { borderRadius: '6px' } }>
+                        <Button type="primary" htmlType="submit" size="large" block style={ { borderRadius: '6px' } } loading={status === 'loading'}>
                             Create Account
                         </Button>
                     </Form.Item>
 
                     <div style={ { textAlign: 'center' } }>
-                        Already have an account? <a href="/login">Log in</a>
+                        Already have an account? <a href="/signin">Sign in</a>
                     </div>
                 </Form>
             </Card>

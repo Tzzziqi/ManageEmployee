@@ -1,6 +1,7 @@
 import { combineReducers, configureStore } from '@reduxjs/toolkit';
 import { FLUSH, PAUSE, PERSIST, persistReducer, persistStore, PURGE, REGISTER, REHYDRATE, } from 'redux-persist';
 import inviteReducer from './slices/inviteSlice'
+import authReducer from './slices/authSlice'
 
 const storage = {
     getItem: (key: string) => Promise.resolve(localStorage.getItem(key)),
@@ -10,6 +11,7 @@ const storage = {
 
 const rootReducer = combineReducers({
     invite: inviteReducer,
+    auth: authReducer,
 });
 
 const persistConfig = {
