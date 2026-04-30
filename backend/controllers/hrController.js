@@ -2,11 +2,24 @@ const Onboarding = require("../models/Onboarding");
 
 const getAllApplications = async (req, res) => {
   try {
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 5;
+
+    const skip = (page - 1) * limit;
+
+    const total = await Onboarding.countDocuments();
+
     const applications = await Onboarding.find()
       .populate("user", "username email role")
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
 
-    res.status(200).json(applications);
+    res.status(200).json({
+      applications,
+      page,
+      totalPages: Math.ceil(total / limit),
+    });
   } catch (error) {
     res.status(500).json({
       message: "Failed to get onboarding",
@@ -25,11 +38,23 @@ const getApplicationsByStatus = async (req, res) => {
       });
     }
 
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 5;
+    const skip = (page - 1) * limit;
+
+    const total = await Onboarding.countDocuments({ status });
+
     const applications = await Onboarding.find({ status })
       .populate("user", "username email role")
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
 
-    res.status(200).json(applications);
+    res.status(200).json({
+      applications,
+      page,
+      totalPages: Math.ceil(total / limit),
+    });
   } catch (error) {
     res.status(500).json({
       message: "Failed to get applications by status",

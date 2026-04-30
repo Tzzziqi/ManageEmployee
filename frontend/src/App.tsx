@@ -9,11 +9,10 @@ function App() {
             <Routes>
                 <Route path="/WelcomeToChuwa/:inviteToken" element={ <VerifyInvitePage/> }/>
                 <Route path="/register/:inviteToken" element={ <RegistrationPage/> }/>
-                <Route path="/hr/applications" element={<HRApplicationsPage />} />
-                <Route path="/" element={<Navigate to="/hr/applications" replace />} />
+                <Route path="/hr/onboarding" element={<HRApplicationsPage />} />
+                <Route path="/" element={<Navigate to="/hr/onboarding" replace />} />
             </Routes>
         </div>
-
     )
 }
 
