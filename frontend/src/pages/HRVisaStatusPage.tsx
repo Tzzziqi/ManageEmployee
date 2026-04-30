@@ -77,7 +77,6 @@ const HRVisaStatusPage = () => {
       <main className="flex-1 p-8">
         <div className="mx-auto max-w-5xl">
 
-          {/* Header */}
           <div className="mb-6 rounded-xl border bg-white p-6 shadow-sm flex justify-between">
             <div>
               <h2 className="text-2xl font-bold">Visa Status Management</h2>
@@ -98,7 +97,6 @@ const HRVisaStatusPage = () => {
             </select>
           </div>
 
-          {/* Content */}
           {loading ? (
             <div className="bg-white p-6 rounded border">
               Loading...
@@ -114,7 +112,7 @@ const HRVisaStatusPage = () => {
                   key={emp._id}
                   className="bg-white rounded-xl border p-6 shadow-sm"
                 >
-                  {/* Employee info */}
+                    
                   <div className="mb-4">
                     <h3 className="font-bold text-lg">
                       {emp.employee?.username}
@@ -124,7 +122,6 @@ const HRVisaStatusPage = () => {
                     </p>
                   </div>
 
-                  {/* Documents */}
                   <div className="grid grid-cols-4 gap-4">
                     {DOCUMENT_ORDER.map((type) => {
                       const doc = emp.documents.find(
