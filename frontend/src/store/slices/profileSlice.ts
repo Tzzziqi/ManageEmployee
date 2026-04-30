@@ -67,6 +67,32 @@ export const updateEmployment = createAsyncThunk(
   }
 );
 
+// Thunk 6: 
+export const updateEmergencyContact = createAsyncThunk(
+  'profile/updateEmergencyContact',
+  async (emergencyData: any, { rejectWithValue }) => {
+    try {
+      const res = await api.put('/api/employee/profile/emergency', emergencyData);
+      return res.data;
+    } catch (err: any) {
+      return rejectWithValue(err.response?.data?.message);
+    }
+  }
+);
+
+// ── initialState define, clear the bug ──
+interface ProfileState {
+  data: any;
+  loading: boolean;
+  error: string | null;
+}
+
+const initialState: ProfileState = {
+  data: null,
+  loading: false,
+  error: null,
+};
+
 // ======= slice: define teh states and my reducer's logic =======
 const profileSlice = createSlice({
     name:'profile',
@@ -76,26 +102,72 @@ const profileSlice = createSlice({
         error: null as string | null,
     },
     reducers: {}, // empty, cause the profile data comes from bacnkedGET, and stroed at state.data,no UI action needed.
-    extraReducers: (builder) =>{
-        builder
+
+    extraReducers: (builder) => {
+      builder
+        // ── fetchProfile ──
         .addCase(fetchProfile.pending, (state) => {
-            state.loading = true;
-            state.error = null;
+          state.loading = true;
+          state.error = null;
         })
         .addCase(fetchProfile.fulfilled, (state, action) => {
-        state.loading = false;
-        state.data    = action.payload;   
+          state.loading = false;
+          state.data = action.payload;
         })
         .addCase(fetchProfile.rejected, (state, action) => {
-        state.loading = false;
-        state.error   = action.payload as string;
+          state.loading = false;
+          state.error = action.payload as string;
         })
-        // this one is local update 
+
+        // ── updateAddress ──
+        // 后端返回：{ message, address: employee.address }
         .addCase(updateAddress.fulfilled, (state, action) => {
-        if (state.data) {
-          state.data.address = action.payload.address;
-        }
+          if (state.data) {
+            state.data.address = action.payload.address;
+          }
+        })
+
+        // ── updateName ──
+        // 后端返回：{ message, data: { firstName, lastName, middleName, preferredName } }
+        .addCase(updateName.fulfilled, (state, action) => {
+          if (state.data) {
+            const { firstName, lastName, middleName, preferredName } = action.payload.data;
+            state.data.firstName     = firstName;
+            state.data.lastName      = lastName;
+            state.data.middleName    = middleName;
+            state.data.preferredName = preferredName;
+          }
+        })
+
+        // ── updateContact ──
+        // 后端返回：{ message, data: { cellPhone, workPhone } }
+        .addCase(updateContact.fulfilled, (state, action) => {
+          if (state.data) {
+            const { cellPhone, workPhone } = action.payload.data;
+            state.data.cellPhone = cellPhone;
+            state.data.workPhone = workPhone;
+          }
+        })
+
+        // ── updateEmployment ──
+        // 后端返回：{ message, data: { visaTitle, visaStart, visaEnd } }
+        .addCase(updateEmployment.fulfilled, (state, action) => {
+          if (state.data) {
+            const { visaTitle, visaStart, visaEnd } = action.payload.data;
+            state.data.visaTitle = visaTitle;
+            state.data.visaStart = visaStart;
+            state.data.visaEnd   = visaEnd;
+          }
+        })
+
+        // ── updateEmergencyContact ──
+        // 后端返回：{ message, emergencyContacts: employee.emergencyContacts }
+        .addCase(updateEmergencyContact.fulfilled, (state, action) => {
+          if (state.data) {
+            state.data.emergencyContacts = action.payload.emergencyContacts;
+          }
       });
-    }
+  },
 });
+
 export default profileSlice.reducer;
