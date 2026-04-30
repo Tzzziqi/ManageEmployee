@@ -1,12 +1,12 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
-import authService from "../../services/authService";
+import authService, { type SignUpProps } from "../../services/authService";
 
 export const signup = createAsyncThunk(
     'auth/signup',
-    async (inviteToken: string, thunkAPI) => {
+    async (props: SignUpProps, thunkAPI) => {
         try {
-            return await authService.signup(inviteToken);
+            return await authService.signup(props);
         } catch (error) {
             let message;
             if (axios.isAxiosError(error)) {
@@ -25,8 +25,8 @@ const initialState = {
     error: '',
 }
 
-const inviteSlice = createSlice({
-    name: 'invite',
+const authSlice = createSlice({
+    name: 'auth',
     initialState,
     reducers: {
         logout: (state) => {
@@ -41,8 +41,12 @@ const inviteSlice = createSlice({
             .addCase(signup.pending, (state) => {
                 state.status = 'loading';
             })
-            .addCase(signup.fulfilled, (state) => {
+            .addCase(signup.fulfilled, (state, action) => {
                 state.status = 'succeeded';
+                state.username = action.payload.username;
+                state.token = action.payload.token;
+                state.isAuthenticated = true;
+                localStorage.setItem('token', action.payload.token);
             })
             .addCase(signup.rejected, (state, action) => {
                 state.status = 'failed';
@@ -51,5 +55,5 @@ const inviteSlice = createSlice({
     }
 })
 
-export const { logout } = inviteSlice.actions;
-export default inviteSlice.reducer;
+export const { logout } = authSlice.actions;
+export default authSlice.reducer;

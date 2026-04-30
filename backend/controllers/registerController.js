@@ -61,8 +61,7 @@ const register = async (req, res, _next) => {
         const [newUser] = await User.create([{ username, email, password, role }], { session });
         await RegistrationToken.updateOne({ inviteToken }, { status: 'used' }, { session });
         await session.commitTransaction();
-        const jwtToken = generateJWTToken(newUser);
-        const responseData = generateUserResponseData(newUser, jwtToken);
+        const responseData = generateUserResponseData(newUser);
         generateResponse(res, 201, "Successfully register.", responseData);
     } catch (error) {
         await session.abortTransaction();
