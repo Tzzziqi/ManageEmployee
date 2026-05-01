@@ -18,10 +18,9 @@ const SignIn: React.FC = () => {
 
     const onFinish = async (values: SignInProps) => {
         try {
-            await dispatch(signIn(values)).unwrap();
+            const authData = await dispatch(signIn(values)).unwrap();
             message.success('Sign In successful! Redirecting...');
-            await new Promise(resolve => setTimeout(resolve, 3000));
-            navigate('/application');
+            navigate(authData.role === 'hr' ? '/hr/onboarding' : '/application');
         } catch (error) {
             message.error((error as string) || 'Sign In. Please reach out with the HR.');
         }

@@ -26,7 +26,7 @@ const App = () => {
       <Route path="/employee/visa-status" element={<VisaStatusPage />} />
 
       {/* HR */}
-      <Route path="/" element={<Navigate to="/hr/onboarding" replace />} />
+      <Route path="/" element={<Navigate to="/signin" replace />} />
       <Route path="/hr" element={<Navigate to="/hr/onboarding" replace />} />
       <Route path="/hr/onboarding" element={<HRApplicationsPage />} />
       <Route path="/hr/employees" element={<HREmployeeProfilesPage />} />
