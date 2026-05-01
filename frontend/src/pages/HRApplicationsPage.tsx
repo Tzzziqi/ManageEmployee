@@ -127,10 +127,6 @@ const HRApplicationsPage = () => {
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-2xl font-bold">Onboarding Applications</h2>
-                <p className="mt-1 text-gray-600">
-                  Review employee onboarding applications and update approval
-                  status.
-                </p>
               </div>
 
               <select

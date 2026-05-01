@@ -33,6 +33,9 @@ const HREmployeeProfileDetailPage = () => {
   };
 
   const displayValue = (value?: string) => value || "N/A";
+  const sectionTitleClass = "mb-4 text-lg font-semibold";
+  const fieldGridClass = "grid grid-cols-1 gap-4 md:grid-cols-2";
+  const fieldLabelClass = "font-medium";
 
   const loadProfile = async () => {
     if (!id) {
@@ -97,78 +100,82 @@ const HREmployeeProfileDetailPage = () => {
           ) : !employee ? (
             <div className="rounded-xl border bg-white p-6 shadow-sm">Employee not found.</div>
           ) : (
-            <div className="space-y-5">
-              <section className="rounded-xl border bg-white p-6 shadow-sm">
-                <h3 className="mb-4 text-lg font-semibold">Name</h3>
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                  <p><span className="font-medium">First Name:</span> {displayValue(employee.firstName)}</p>
-                  <p><span className="font-medium">Last Name:</span> {displayValue(employee.lastName)}</p>
-                  <p><span className="font-medium">Middle Name:</span> {displayValue(employee.middleName)}</p>
-                  <p><span className="font-medium">Preferred Name:</span> {displayValue(employee.preferredName)}</p>
+            <article className="rounded-xl border bg-white p-6 shadow-sm">
+              <section>
+                <div className="pb-6">
+                  <h3 className={sectionTitleClass}>Name</h3>
+                  <div className="grid gap-6 md:grid-cols-[auto_1fr] md:items-start">
+                    {employee.profilePicture ? (
+                      <img
+                        src={employee.profilePicture}
+                        alt="Profile"
+                        className="h-20 w-20 rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gray-200 text-lg font-semibold text-gray-600">
+                        {employee.firstName?.[0] || "N"}
+                        {employee.lastName?.[0] || "A"}
+                      </div>
+                    )}
+                    <div className={fieldGridClass}>
+                      <p><span className={fieldLabelClass}>First Name:</span> {displayValue(employee.firstName)}</p>
+                      <p><span className={fieldLabelClass}>Last Name:</span> {displayValue(employee.lastName)}</p>
+                      <p><span className={fieldLabelClass}>Middle Name:</span> {displayValue(employee.middleName)}</p>
+                      <p><span className={fieldLabelClass}>Preferred Name:</span> {displayValue(employee.preferredName)}</p>
+                      <p><span className={fieldLabelClass}>Email:</span> {displayValue(employee.email)}</p>
+                      <p><span className={fieldLabelClass}>SSN:</span> {displayValue(employee.ssn)}</p>
+                      <p><span className={fieldLabelClass}>Date of Birth:</span> {formatDate(employee.dateOfBirth)}</p>
+                      <p><span className={fieldLabelClass}>Gender:</span> {displayValue(employee.gender)}</p>
+                    </div>
+                  </div>
                 </div>
 
-                <div className="mt-4 flex items-center gap-4">
-                  {employee.profilePicture ? (
-                    <img
-                      src={employee.profilePicture}
-                      alt="Profile"
-                      className="h-20 w-20 rounded-full object-cover"
-                    />
-                  ) : (
-                    <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gray-200 text-lg font-semibold text-gray-600">
-                      {employee.firstName?.[0] || "N"}
-                      {employee.lastName?.[0] || "A"}
-                    </div>
-                  )}
-                  <div>
-                    <p><span className="font-medium">Email:</span> {displayValue(employee.email)}</p>
-                    <p><span className="font-medium">SSN:</span> {displayValue(employee.ssn)}</p>
-                    <p><span className="font-medium">Date of Birth:</span> {formatDate(employee.dateOfBirth)}</p>
-                    <p><span className="font-medium">Gender:</span> {displayValue(employee.gender)}</p>
+                <div className="border-t py-6">
+                  <h3 className={sectionTitleClass}>Address</h3>
+                  <div className={fieldGridClass}>
+                    <p><span className={fieldLabelClass}>Building/Apt #:</span> {displayValue(employee.address?.building)}</p>
+                    <p><span className={fieldLabelClass}>Street:</span> {displayValue(employee.address?.street)}</p>
+                    <p><span className={fieldLabelClass}>City:</span> {displayValue(employee.address?.city)}</p>
+                    <p><span className={fieldLabelClass}>State:</span> {displayValue(employee.address?.state)}</p>
+                    <p><span className={fieldLabelClass}>Zip:</span> {displayValue(employee.address?.zip)}</p>
+                  </div>
+                </div>
+
+                <div className="border-t pt-6">
+                  <h3 className={sectionTitleClass}>Contact Info</h3>
+                  <div className={fieldGridClass}>
+                    <p><span className={fieldLabelClass}>Cell Phone:</span> {displayValue(employee.cellPhone)}</p>
+                    <p><span className={fieldLabelClass}>Work Phone:</span> {displayValue(employee.workPhone)}</p>
                   </div>
                 </div>
               </section>
 
-              <section className="rounded-xl border bg-white p-6 shadow-sm">
-                <h3 className="mb-4 text-lg font-semibold">Address</h3>
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                  <p><span className="font-medium">Building/Apt #:</span> {displayValue(employee.address?.building)}</p>
-                  <p><span className="font-medium">Street:</span> {displayValue(employee.address?.street)}</p>
-                  <p><span className="font-medium">City:</span> {displayValue(employee.address?.city)}</p>
-                  <p><span className="font-medium">State:</span> {displayValue(employee.address?.state)}</p>
-                  <p><span className="font-medium">Zip:</span> {displayValue(employee.address?.zip)}</p>
+              <section className="border-t py-6">
+                <h3 className={sectionTitleClass}>Employment</h3>
+                <div className={fieldGridClass}>
+                  <p><span className={fieldLabelClass}>Visa Title:</span> {displayValue(employee.visaTitle)}</p>
+                  <p><span className={fieldLabelClass}>Start Date:</span> {formatDate(employee.visaStart)}</p>
+                  <p><span className={fieldLabelClass}>End Date:</span> {formatDate(employee.visaEnd)}</p>
                 </div>
               </section>
 
-              <section className="rounded-xl border bg-white p-6 shadow-sm">
-                <h3 className="mb-4 text-lg font-semibold">Contact Info</h3>
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                  <p><span className="font-medium">Cell Phone:</span> {displayValue(employee.cellPhone)}</p>
-                  <p><span className="font-medium">Work Phone:</span> {displayValue(employee.workPhone)}</p>
-                </div>
-              </section>
-
-              <section className="rounded-xl border bg-white p-6 shadow-sm">
-                <h3 className="mb-4 text-lg font-semibold">Employment</h3>
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                  <p><span className="font-medium">Visa Title:</span> {displayValue(employee.visaTitle)}</p>
-                  <p><span className="font-medium">Start Date:</span> {formatDate(employee.visaStart)}</p>
-                  <p><span className="font-medium">End Date:</span> {formatDate(employee.visaEnd)}</p>
-                </div>
-              </section>
-
-              <section className="rounded-xl border bg-white p-6 shadow-sm">
-                <h3 className="mb-4 text-lg font-semibold">Emergency Contact</h3>
+              <section className="border-t py-6">
+                <h3 className={sectionTitleClass}>Emergency Contact</h3>
                 {employee.emergencyContacts?.length ? (
-                  <div className="space-y-3">
+                  <div className="space-y-6">
                     {employee.emergencyContacts.map((contact, index) => (
-                      <div key={`${contact.firstName}-${contact.lastName}-${index}`} className="rounded border p-4">
-                        <p><span className="font-medium">First Name:</span> {displayValue(contact.firstName)}</p>
-                        <p><span className="font-medium">Last Name:</span> {displayValue(contact.lastName)}</p>
-                        <p><span className="font-medium">Middle Name:</span> {displayValue(contact.middleName)}</p>
-                        <p><span className="font-medium">Phone:</span> {displayValue(contact.phone)}</p>
-                        <p><span className="font-medium">Email:</span> {displayValue(contact.email)}</p>
-                        <p><span className="font-medium">Relationship:</span> {displayValue(contact.relationship)}</p>
+                      <div
+                        key={`${contact.firstName}-${contact.lastName}-${index}`}
+                        className={index > 0 ? "border-t pt-6" : undefined}
+                      >
+                        <div className={fieldGridClass}>
+                          <p><span className={fieldLabelClass}>First Name:</span> {displayValue(contact.firstName)}</p>
+                          <p><span className={fieldLabelClass}>Last Name:</span> {displayValue(contact.lastName)}</p>
+                          <p><span className={fieldLabelClass}>Middle Name:</span> {displayValue(contact.middleName)}</p>
+                          <p><span className={fieldLabelClass}>Phone:</span> {displayValue(contact.phone)}</p>
+                          <p><span className={fieldLabelClass}>Email:</span> {displayValue(contact.email)}</p>
+                          <p><span className={fieldLabelClass}>Relationship:</span> {displayValue(contact.relationship)}</p>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -177,8 +184,8 @@ const HREmployeeProfileDetailPage = () => {
                 )}
               </section>
 
-              <section className="rounded-xl border bg-white p-6 shadow-sm">
-                <h3 className="mb-4 text-lg font-semibold">Documents</h3>
+              <section className="border-t pt-6">
+                <h3 className={sectionTitleClass}>Documents</h3>
                 {combinedDocuments.length ? (
                   <div className="space-y-3">
                     {combinedDocuments.map((document, index) => (
@@ -204,7 +211,7 @@ const HREmployeeProfileDetailPage = () => {
                   <p className="text-gray-600">No uploaded documents found.</p>
                 )}
               </section>
-            </div>
+            </article>
           )}
         </div>
       </main>

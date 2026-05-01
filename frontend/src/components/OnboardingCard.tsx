@@ -52,9 +52,6 @@ const OnboardingCard = ({
               {application.firstName} {application.lastName}
             </h3>
             <p className="text-gray-600">{application.email}</p>
-            <p className="text-gray-600">
-              {application.workAuthorization || "No work authorization"}
-            </p>
           </div>
         </div>
 
@@ -65,36 +62,6 @@ const OnboardingCard = ({
         >
           Onboarding {application.status}
         </span>
-      </div>
-
-      <div className="mb-5 grid grid-cols-4 gap-4 border-t pt-4">
-        <div>
-          <p className="text-sm font-semibold uppercase text-gray-500">
-            First Name
-          </p>
-          <p>{application.firstName}</p>
-        </div>
-
-        <div>
-          <p className="text-sm font-semibold uppercase text-gray-500">
-            Last Name
-          </p>
-          <p>{application.lastName}</p>
-        </div>
-
-        <div>
-          <p className="text-sm font-semibold uppercase text-gray-500">
-            Preferred Name
-          </p>
-          <p>{application.preferredName || "—"}</p>
-        </div>
-
-        <div>
-          <p className="text-sm font-semibold uppercase text-gray-500">
-            Phone
-          </p>
-          <p>{application.phone || "—"}</p>
-        </div>
       </div>
 
       {application.feedback && (
