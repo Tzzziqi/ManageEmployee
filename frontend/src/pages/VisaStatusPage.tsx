@@ -52,12 +52,12 @@ const VisaStatusPage = () => {
                 <DocumentCard lable="OPT EAD" doc={visaData?.OPT_EAD} docType="OPT_EAD"
                 canUpload={visaData?.OPT_RECEIPT?.status === 'approved' && (!visaData?.OPT_EAD || visaData?.OPT_EAD?.status === 'rejected')}/>
 
-                <DocumentCard lable="I-983" doc={visaData?.I983} docType="I983"
-                canUpload={visaData?.OPT_EAD?.status === 'approved' && (!visaData?.I983 || visaData?.I983?.status === 'rejected')}
+                <DocumentCard lable="I-983" doc={visaData?.I_983} docType="I_983"
+                canUpload={visaData?.OPT_EAD?.status === 'approved' && (!visaData?.I_983 || visaData?.I_983?.status === 'rejected')}
                 showTemplates={true} />
             
-                <DocumentCard lable="I-20" doc={visaData?.I20} docType="I20"
-                canUpload={visaData?.I983?.status === 'approved' && (!visaData?.I20 || visaData?.I20?.status === 'rejected')}/>
+                <DocumentCard lable="I-20" doc={visaData?.I_20} docType="I_20"
+                canUpload={visaData?.I_983?.status === 'approved' && (!visaData?.I_20 || visaData?.I_20?.status === 'rejected')}/>
 
         </main>
     </div>

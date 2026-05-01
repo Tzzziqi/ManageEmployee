@@ -13,6 +13,16 @@ const s3 = new S3Client({
   }
 });
 
+const VISA_DOCUMENT_ORDER = ['OPT_RECEIPT', 'OPT_EAD', 'I_983', 'I_20'];
+const LEGACY_DOCUMENT_TYPES = {
+    I983: 'I_983',
+    I20: 'I_20',
+    OPT_EDA: 'OPT_EAD',
+    '-20': 'I_20',
+};
+
+const normalizeDocumentType = (docType) => LEGACY_DOCUMENT_TYPES[docType] || docType;
+
 // Get Employeee profile by userId and get from JWT Token for safty issue.
 const getProfile = async(req, res) => {
     try {
@@ -113,7 +123,13 @@ const updateEmergencyContact = async (req, res) => {
 // First get the S3 Presigned URL before upload the file to S3, then save the file info to MongoDB.
 const getUploadUrl = async (req, res) => {
     try {
-        const { fileType, docType } = req.body;
+        const { fileType } = req.body;
+        const docType = normalizeDocumentType(req.body.docType);
+
+        if (!VISA_DOCUMENT_ORDER.includes(docType)) {
+            return res.status(400).json({ message: 'Invalid document type' });
+        }
+
         const fileKey = `employee/${req.user._id}/${docType}/${uuidv4()}`; // unique file key for S3
         // PutObjectCommand = instruction for "I want to PUT a file to S3"
         // Not uploaded yet — just describes a future operation
@@ -132,22 +148,54 @@ const getUploadUrl = async (req, res) => {
 // Step2: After file is uploaded to S3, save the file info to MongoDB
 const confirmUpload = async (req, res) => {
     try {
-        const {fileKey, docType} = req.body;
+        const {fileKey} = req.body;
+        const docType = normalizeDocumentType(req.body.docType);
+
+        if (!VISA_DOCUMENT_ORDER.includes(docType)) {
+            return res.status(400).json({ message: 'Invalid document type' });
+        }
+
         const employee = await Employee.findOne({ userId: req.user._id }); 
-        const optOrder = ['OPT_RECEIPT', 'OPT_EAD', 'I983', 'I20'];
-        const idx = optOrder.indexOf(docType);
+        if (!employee) {
+            return res.status(404).json({ message: 'Profile not Found' });
+        }
+
+        const visaStatus = await VisaStatus.findOne({ employee: req.user._id });
+        if (!visaStatus) {
+            return res.status(404).json({ message: 'Visa status not found' });
+        }
+
+        const idx = VISA_DOCUMENT_ORDER.indexOf(docType);
         // opt recipt do not need to be approved, idx=== -1 means docType not in optOrder,do not need check. 
         if(idx > 0) {
-            const preDoc = await Document.findOne({
-                employeeId: employee._id,
-                type: optOrder[idx - 1],  
-                status: 'approved'   
-            });
+            const preDoc = visaStatus.documents.find((document) => (
+                document.documentType === VISA_DOCUMENT_ORDER[idx - 1]
+            ));
             if (!preDoc) {
-                return res.status(400).json({message: `Please wait for ${optOrder[idx-1]} to be approved first`});
+                return res.status(400).json({message: `Please wait for ${VISA_DOCUMENT_ORDER[idx-1]} to be approved first`});
+            }
+
+            if (preDoc.status !== 'approved') {
+                return res.status(400).json({message: `Please wait for ${VISA_DOCUMENT_ORDER[idx-1]} to be approved first`});
             }
         }
         const fileUrl = `https://${process.env.AWS_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${fileKey}`;
+
+        let visaDocument = visaStatus.documents.find((document) => document.documentType === docType);
+        if (!visaDocument) {
+            visaStatus.documents.push({ documentType: docType });
+            visaDocument = visaStatus.documents[visaStatus.documents.length - 1];
+        }
+
+        visaDocument.fileUrl = fileUrl;
+        visaDocument.fileName = fileKey.split('/').pop();
+        visaDocument.status = 'pending';
+        visaDocument.feedback = '';
+        visaDocument.uploadedAt = new Date();
+        visaDocument.reviewedAt = undefined;
+        visaDocument.approvedAt = undefined;
+        await visaStatus.save();
+
         // create a new doc to track the file info in MongoDB, to tell HR,  initial status is pending 
         const doc = await Document.create({
             employeeId: employee._id,
@@ -177,7 +225,7 @@ const getVisaStatus = async (req, res) => {
         const docs = visaStatus?.documents || [];
         const docMap = {};
         docs.forEach((document) => {
-            docMap[document.documentType] = document;
+            docMap[normalizeDocumentType(document.documentType)] = document;
         });
 
         res.json({
