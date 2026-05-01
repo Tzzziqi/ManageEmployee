@@ -1,6 +1,6 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
-// import { logout } from '../../store/slices/authSlice'; 
+import { logout } from '../store/slices/authSlice'; 
 
 const Navbar = () => {
     // 3Hook: useLocation to get current URL, get dispatch from redux and clear data when loggout; useNavigate get jump func 

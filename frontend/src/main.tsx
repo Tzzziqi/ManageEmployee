@@ -6,6 +6,7 @@ import { BrowserRouter } from 'react-router-dom'
 import { persistor, store } from './store/store.ts'
 import { Spin } from 'antd';
 import App from './App.tsx'
+import './index.css'  
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

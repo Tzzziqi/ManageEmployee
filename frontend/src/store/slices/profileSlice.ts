@@ -130,11 +130,14 @@ const profileSlice = createSlice({
         // 后端返回：{ message, data: { firstName, lastName, middleName, preferredName } }
         .addCase(updateName.fulfilled, (state, action) => {
           if (state.data) {
-            const { firstName, lastName, middleName, preferredName } = action.payload.data;
+            const { firstName, lastName, middleName, preferredName, ssn, dateOfBirth, gender } = action.payload.data;
             state.data.firstName     = firstName;
             state.data.lastName      = lastName;
             state.data.middleName    = middleName;
             state.data.preferredName = preferredName;
+            state.data.ssn           = ssn;
+            state.data.dateOfBirth   = dateOfBirth;
+            state.data.gender        = gender;
           }
         })
 

@@ -28,6 +28,7 @@ const NameSection = () => {
   const handleStartEdit = () => reset(defaultValues);
 
   const handleSave = handleSubmit(async (formData) => {
+    console.log('✅ handleSubmit dispactched,data is：', formData); 
     try {
       await dispatch(updateName(formData)).unwrap();
       toast.success('Name updated!');
@@ -35,7 +36,11 @@ const NameSection = () => {
       toast.error(error || 'Failed to update name');
       throw error;
     }
-  });
+    },
+    (errors) => {
+      console.log('❌ fail to validate：', errors);  
+    }
+  );
 
   const handleDiscard = () => reset(defaultValues);
 
@@ -65,7 +70,7 @@ const NameSection = () => {
             </div>
             <div>
               <Label>SSN *</Label>
-              <Input {...register('ssn', { required: 'SSN is required' })} placeholder="XXX-XX-XXXX" />
+              <Input {...register('ssn')} placeholder="XXX-XX-XXXX" />
               {errors.ssn && <p className="text-red-500 text-xs mt-1">{String(errors.ssn.message ?? '')}</p>}
             </div>
             <div>

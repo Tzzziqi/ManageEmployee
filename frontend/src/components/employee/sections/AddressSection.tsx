@@ -1,5 +1,5 @@
 // Address component: display and edit addrss form, save to backend
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useDispatch, useSelector } from 'react-redux';
 import { updateAddress } from '../../../store/slices/profileSlice';
@@ -12,9 +12,25 @@ import toast from 'react-hot-toast';
 
 const AddressSection = () => {
     const dispatch = useDispatch<AppDispatch>(); //generic, dispatch support async 
-    const address = useSelector((s: RootState) => s.profile.data?.address);
+    const address = useSelector((s: RootState) => s.profile.data?.address ?? {street: '', city: '', state: '', zip: ''});    
     // init react-hook-form
-    const { register, handleSubmit, reset, formState: { errors } } = useForm({ defaultValues: address })
+    const { register, handleSubmit, reset, formState: { errors } } = useForm({
+      defaultValues: {
+        street: address?.street ?? '',
+        city:   address?.city   ?? '',
+        state:  address?.state  ?? '',
+        zip:    address?.zip    ?? '',
+      }
+    });
+
+    useEffect(() => {
+      reset({
+        street: address?.street ?? '',
+        city:   address?.city   ?? '',
+        state:  address?.state  ?? '',
+        zip:    address?.zip    ?? '',
+      });
+    }, [address]);
 
 const handleStartEdit = () => reset(address);
 const handleSave = handleSubmit(async (formData) => {

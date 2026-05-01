@@ -6,7 +6,7 @@ const requireRole  = require('../middlewares/roleMiddleware');
 const {
   getProfile, updateAddress, updateEmergencyContact,
   updateName, updateContact, updateEmployment,
-  getUploadUrl, confirmUpload, getVisaStatus
+  getUploadUrl, confirmUpload, getVisaStatus, updateOnboardingStatus
 } = require('../controllers/employeeController');
 
 const employeeOrHR = [authMiddleware, requireRole('employee', 'hr')];
@@ -23,5 +23,8 @@ router.post('/documents/upload-url',      ...employeeOrHR, getUploadUrl);
 router.post('/documents/confirm',         ...employeeOrHR, confirmUpload);
 
 router.get('/visa-status',                ...employeeOrHR, getVisaStatus);
+
+router.put('/onboarding/status', authMiddleware, requireRole('hr'), updateOnboardingStatus);
+
 
 module.exports = router;

@@ -1,5 +1,5 @@
 import React, { type ReactNode } from 'react';
-import backgroundImg from '../assets/background.jpg';
+// import backgroundImg from '../assets/background.jpg';
 
 interface AuthLayoutProps {
     children: ReactNode;
@@ -8,7 +8,7 @@ interface AuthLayoutProps {
 
 const AuthLayout: React.FC<AuthLayoutProps> = ({
                                                    children,
-                                                   bgImage = backgroundImg
+                                                   bgImage = ''
                                                }) => {
     return (
         <div
