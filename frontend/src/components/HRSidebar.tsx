@@ -5,7 +5,10 @@ const HRSidebar = () => {
   const location = useLocation();
 
   const isActive = (path: string) => {
-    return location.pathname === path
+    const isEmployeeProfilesPath =
+      path === "/hr/employees" && location.pathname.startsWith("/hr/employees");
+
+    return location.pathname === path || isEmployeeProfilesPath
       ? "bg-gray-100 text-blue-700 font-semibold"
       : "text-gray-700 hover:bg-gray-100";
   };

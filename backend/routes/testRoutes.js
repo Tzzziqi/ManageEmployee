@@ -24,6 +24,7 @@ router.post("/seed", async (req, res) => {
       { first: "Ian", last: "Guo", email: "ian.guo@gmail.com" },
       { first: "Jack", last: "Huang", email: "jack.huang@gmail.com" },
     ];
+    const approvedAt = new Date(Date.now() - 4 * 24 * 60 * 60 * 1000);
 
     for (let i = 0; i < employees.length; i++) {
       const emp = employees[i];
@@ -58,18 +59,20 @@ router.post("/seed", async (req, res) => {
           {
             documentType: "OPT_RECEIPT",
             status: "approved",
+            approvedAt,
           },
           {
             documentType: "OPT_EAD",
             status: i % 2 === 0 ? "pending" : "approved",
+            approvedAt: i % 2 === 0 ? undefined : approvedAt,
           },
           {
             documentType: "I_983",
-            status: "not_uploaded",
+            status: "not_started",
           },
           {
             documentType: "I_20",
-            status: "not_uploaded",
+            status: "not_started",
           },
         ],
       });

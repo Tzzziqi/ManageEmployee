@@ -14,8 +14,9 @@ type VisaView = "in-progress" | "all";
 
 interface VisaDocument {
   documentType: string;
-  status: "not_uploaded" | "pending" | "approved" | "rejected";
+  status: "not_started" | "not_uploaded" | "pending" | "approved" | "rejected";
   fileUrl?: string;
+  approvedAt?: string;
 }
 
 interface VisaStatusEmployee {
@@ -137,6 +138,23 @@ const HRVisaStatusPage = () => {
     return "bg-gray-100 text-gray-500";
   };
 
+  const canSendReminder = (
+    previousStep: VisaDocument | undefined,
+    currentStep: VisaDocument | undefined
+  ) => {
+    if (!previousStep?.approvedAt || !currentStep) {
+      return false;
+    }
+
+    return (
+      previousStep.status === "approved" &&
+      currentStep.status === "not_started" &&
+      !currentStep.fileUrl &&
+      Date.now() - new Date(previousStep.approvedAt).getTime() >=
+        3 * 24 * 60 * 60 * 1000
+    );
+  };
+
   return (
     <div className="flex min-h-screen bg-[#f7f6f2]">
       <HRSidebar />
@@ -187,7 +205,15 @@ const HRVisaStatusPage = () => {
                         const doc = emp.documents.find(
                           (item) => item.documentType === type
                         );
-                        const status = doc?.status || "not_uploaded";
+                        const previousType =
+                          DOCUMENT_ORDER[DOCUMENT_ORDER.indexOf(type) - 1];
+                        const previousDoc = emp.documents.find(
+                          (item) => item.documentType === previousType
+                        );
+                        const status =
+                          doc?.status === "not_uploaded"
+                            ? "not_started"
+                            : doc?.status || "not_started";
 
                         return (
                           <div key={type} className="rounded border p-3">
@@ -214,12 +240,14 @@ const HRVisaStatusPage = () => {
                               </a>
                             )}
 
-                            <button
-                              onClick={() => handleSendReminder(emp._id, type)}
-                              className="mt-2 w-full rounded bg-blue-600 py-1 text-xs text-white hover:bg-blue-700"
-                            >
-                              Send Reminder
-                            </button>
+                            {canSendReminder(previousDoc, doc) && (
+                              <button
+                                onClick={() => handleSendReminder(emp._id, type)}
+                                className="mt-2 w-full rounded bg-blue-600 py-1 text-xs text-white hover:bg-blue-700"
+                              >
+                                Send Reminder
+                              </button>
+                            )}
 
                             {status === "pending" && (
                               <div className="mt-2 space-y-1">

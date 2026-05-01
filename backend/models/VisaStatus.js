@@ -15,8 +15,8 @@ const visaDocumentSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["not_uploaded", "pending", "approved", "rejected"],
-      default: "not_uploaded",
+      enum: ["not_started", "pending", "approved", "rejected"],
+      default: "not_started",
     },
     feedback: {
       type: String,
@@ -26,6 +26,9 @@ const visaDocumentSchema = new mongoose.Schema(
       type: Date,
     },
     reviewedAt: {
+      type: Date,
+    },
+    approvedAt: {
       type: Date,
     },
   },
@@ -57,10 +60,10 @@ const visaStatusSchema = new mongoose.Schema(
     documents: {
       type: [visaDocumentSchema],
       default: [
-        { documentType: "OPT_RECEIPT", status: "not_uploaded" },
-        { documentType: "OPT_EAD", status: "not_uploaded" },
-        { documentType: "I_983", status: "not_uploaded" },
-        { documentType: "I_20", status: "not_uploaded" },
+        { documentType: "OPT_RECEIPT", status: "not_started" },
+        { documentType: "OPT_EAD", status: "not_started" },
+        { documentType: "I_983", status: "not_started" },
+        { documentType: "I_20", status: "not_started" },
       ],
     },
   },

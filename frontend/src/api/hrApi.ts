@@ -17,6 +17,65 @@ export interface Onboarding {
   updatedAt?: string;
 }
 
+export interface EmployeeSummary {
+  _id: string;
+  userId?: {
+    _id: string;
+    username?: string;
+    email?: string;
+    role?: "employee" | "hr";
+  };
+  firstName: string;
+  lastName: string;
+  middleName?: string;
+  preferredName?: string;
+  email: string;
+  ssn?: string;
+  visaTitle?: string;
+  cellPhone?: string;
+}
+
+export interface EmployeeUploadedDocument {
+  _id: string;
+  type: string;
+  fileUrl: string;
+  status?: string;
+  uploadedAt?: string;
+}
+
+export interface EmployeeProfile {
+  _id: string;
+  firstName: string;
+  lastName: string;
+  middleName?: string;
+  preferredName?: string;
+  profilePicture?: string;
+  email: string;
+  ssn?: string;
+  dateOfBirth?: string;
+  gender?: "male" | "female" | "no_answer";
+  address?: {
+    building?: string;
+    street?: string;
+    city?: string;
+    state?: string;
+    zip?: string;
+  };
+  cellPhone?: string;
+  workPhone?: string;
+  visaTitle?: string;
+  visaStart?: string;
+  visaEnd?: string;
+  emergencyContacts?: Array<{
+    firstName: string;
+    lastName: string;
+    middleName?: string;
+    phone: string;
+    email?: string;
+    relationship: string;
+  }>;
+}
+
 export interface ApplicationsResponse {
   applications: Onboarding[];
   page: number;
@@ -25,9 +84,19 @@ export interface ApplicationsResponse {
 
 export interface EmployeeSearchResponse {
   total: number;
-  employees: Onboarding[];
+  totalEmployees: number;
+  employees: EmployeeSummary[];
   page: number;
   totalPages: number;
+}
+
+export interface EmployeeProfileResponse {
+  employee: EmployeeProfile;
+  uploadedDocuments: EmployeeUploadedDocument[];
+  onboardingDocuments: Array<{
+    name?: string;
+    url?: string;
+  }>;
 }
 
 export const getAllApplications = async (
@@ -69,6 +138,13 @@ export const searchEmployeeProfiles = async (
     },
   });
 
+  return response.data;
+};
+
+export const getEmployeeProfileById = async (
+  id: string
+): Promise<EmployeeProfileResponse> => {
+  const response = await axiosInstance.get(`/hr/employees/${id}`);
   return response.data;
 };
 

@@ -1,6 +1,30 @@
 const VisaStatus = require("../models/VisaStatus");
 const sendEmail = require("../utils/sendEmail");
 
+const DOCUMENT_ORDER = ["OPT_RECEIPT", "OPT_EAD", "I_983", "I_20"];
+const REMINDER_DELAY_MS = 3 * 24 * 60 * 60 * 1000;
+
+const normalizeLegacyDocumentStatuses = (documents) => {
+  documents.forEach((document) => {
+    if (document.status === "not_uploaded") {
+      document.status = "not_started";
+    }
+  });
+};
+
+const canSendReminder = (previousStep, currentStep) => {
+  if (!previousStep?.approvedAt) {
+    return false;
+  }
+
+  return (
+    previousStep.status === "approved" &&
+    currentStep.status === "not_started" &&
+    !currentStep.fileUrl &&
+    Date.now() - previousStep.approvedAt.getTime() >= REMINDER_DELAY_MS
+  );
+};
+
 const getInProgressVisaEmployees = async (req, res) => {
   try {
     const page = Number(req.query.page) || 1;
@@ -10,7 +34,7 @@ const getInProgressVisaEmployees = async (req, res) => {
     const filter = {
       documents: {
         $elemMatch: {
-          status: { $in: ["not_uploaded", "pending", "rejected"] },
+          status: { $in: ["not_started", "not_uploaded", "pending", "rejected"] },
         },
       },
     };
@@ -22,6 +46,10 @@ const getInProgressVisaEmployees = async (req, res) => {
       .populate("onboarding")
       .skip(skip)
       .limit(limit);
+
+    employees.forEach((visa) => {
+      normalizeLegacyDocumentStatuses(visa.documents);
+    });
 
     res.status(200).json({
       employees,
@@ -50,6 +78,10 @@ const getAllVisaStatuses = async (req, res) => {
       .populate("onboarding")
       .skip(skip)
       .limit(limit);
+
+    employees.forEach((visa) => {
+      normalizeLegacyDocumentStatuses(visa.documents);
+    });
 
     res.status(200).json({
       employees,
@@ -85,15 +117,16 @@ const approveVisaDocument = async (req, res) => {
       return res.status(400).json({ message: "Document not found" });
     }
 
-    const order = ["OPT_RECEIPT", "OPT_EAD", "I_983", "I_20"];
-    const index = order.indexOf(documentType);
+    normalizeLegacyDocumentStatuses(visa.documents);
+
+    const index = DOCUMENT_ORDER.indexOf(documentType);
 
     if (index > 0) {
       const prevDoc = visa.documents.find(
-        (d) => d.documentType === order[index - 1]
+        (d) => d.documentType === DOCUMENT_ORDER[index - 1]
       );
 
-      if (prevDoc.status !== "approved") {
+      if (prevDoc?.status !== "approved") {
         return res.status(400).json({
           message: "Previous step not approved yet",
         });
@@ -102,7 +135,17 @@ const approveVisaDocument = async (req, res) => {
 
     doc.status = "approved";
     doc.reviewedAt = new Date();
+    doc.approvedAt = new Date();
     doc.feedback = "";
+
+    const nextDocumentType = DOCUMENT_ORDER[index + 1];
+    const nextDoc = visa.documents.find(
+      (d) => d.documentType === nextDocumentType
+    );
+
+    if (nextDoc && !nextDoc.fileUrl && nextDoc.status !== "pending") {
+      nextDoc.status = "not_started";
+    }
 
     await visa.save();
 
@@ -134,6 +177,8 @@ const rejectVisaDocument = async (req, res) => {
     if (!visa) {
       return res.status(404).json({ message: "Visa record not found" });
     }
+
+    normalizeLegacyDocumentStatuses(visa.documents);
 
     const doc = visa.documents.find(
       (d) => d.documentType === documentType
@@ -175,6 +220,8 @@ const sendReminderEmail = async (req, res) => {
       });
     }
 
+    normalizeLegacyDocumentStatuses(visa.documents);
+
     const doc = visa.documents.find(
       (document) => document.documentType === documentType
     );
@@ -182,6 +229,24 @@ const sendReminderEmail = async (req, res) => {
     if (!doc) {
       return res.status(400).json({
         message: "Document not found",
+      });
+    }
+
+    const index = DOCUMENT_ORDER.indexOf(documentType);
+
+    if (index <= 0) {
+      return res.status(400).json({
+        message: "Reminder not allowed before 3-day deadline",
+      });
+    }
+
+    const previousStep = visa.documents.find(
+      (document) => document.documentType === DOCUMENT_ORDER[index - 1]
+    );
+
+    if (!canSendReminder(previousStep, doc)) {
+      return res.status(400).json({
+        message: "Reminder not allowed before 3-day deadline",
       });
     }
 

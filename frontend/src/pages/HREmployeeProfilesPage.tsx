@@ -1,7 +1,11 @@
 import { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import HRSidebar from "../components/HRSidebar";
 import Pagination from "../components/Pagination";
-import { searchEmployeeProfiles, type Onboarding } from "../api/hrApi";
+import {
+  searchEmployeeProfiles,
+  type EmployeeSummary,
+} from "../api/hrApi";
 
 const HREmployeeProfilesPage = () => {
   const getInitialPage = () => {
@@ -15,12 +19,14 @@ const HREmployeeProfilesPage = () => {
     return params.get("keyword") || "";
   };
 
-  const [employees, setEmployees] = useState<Onboarding[]>([]);
+  const [employees, setEmployees] = useState<EmployeeSummary[]>([]);
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const [search, setSearch] = useState(getInitialSearch);
   const [page, setPage] = useState(getInitialPage);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalEmployees, setTotalEmployees] = useState(0);
 
   const updateUrl = (keyword: string, page: number) => {
     const params = new URLSearchParams();
@@ -49,6 +55,7 @@ const HREmployeeProfilesPage = () => {
 
       setEmployees(data.employees);
       setTotalPages(data.totalPages || 1);
+      setTotalEmployees(data.totalEmployees || 0);
 
       updateUrl(search, page);
     } catch (error) {
@@ -60,12 +67,14 @@ const HREmployeeProfilesPage = () => {
   };
 
   useEffect(() => {
-    const delay = setTimeout(() => {
-      fetchEmployees();
-    }, 300);
-
-    return () => clearTimeout(delay);
+    fetchEmployees();
   }, [search, page]);
+
+  const formatLegalFullName = (employee: EmployeeSummary) => {
+    return [employee.firstName, employee.middleName, employee.lastName]
+      .filter(Boolean)
+      .join(" ");
+  };
 
   return (
     <div className="flex min-h-screen bg-[#f7f6f2]">
@@ -78,20 +87,20 @@ const HREmployeeProfilesPage = () => {
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-2xl font-bold">Employee Profiles</h2>
-                <p className="mt-1 text-gray-600">
-                  View and search all employees.
+                <p className="mt-2 text-sm text-gray-700">
+                  Total employees: <span className="font-semibold">{totalEmployees}</span>
                 </p>
               </div>
 
               <input
                 type="text"
-                placeholder="Search employee..."
+                placeholder="Search"
                 value={search}
                 onChange={(e) => {
                   setSearch(e.target.value);
                   setPage(1);
                 }}
-                className="rounded-lg border px-4 py-2"
+                className="w-[380px] rounded-lg border px-4 py-2"
               />
             </div>
           </div>
@@ -103,7 +112,9 @@ const HREmployeeProfilesPage = () => {
             </div>
           ) : employees.length === 0 ? (
             <div className="rounded-xl border bg-white p-6 shadow-sm">
-              No employees found.
+              {search.trim()
+                ? `No records found for "${search}".`
+                : "No employee records found."}
             </div>
           ) : (
             <>
@@ -111,22 +122,44 @@ const HREmployeeProfilesPage = () => {
                 {employees.map((emp) => (
                   <div
                     key={emp._id}
-                    className="rounded-xl border bg-white p-6 shadow-sm"
+                    className="cursor-pointer rounded-xl border bg-white p-6 shadow-sm transition hover:border-blue-300 hover:shadow"
+                    onClick={() => navigate(`/hr/employees/${emp._id}`)}
                   >
-                    <div className="flex items-center gap-4">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 font-bold text-blue-700">
-                        {emp.firstName?.[0]}
-                        {emp.lastName?.[0]}
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-5">
+                      <div>
+                        <p className="text-xs uppercase tracking-wide text-gray-500">Name</p>
+                        <Link
+                          to={`/hr/employees/${emp._id}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="font-semibold text-blue-700 hover:underline"
+                          onClick={(event) => event.stopPropagation()}
+                        >
+                          {formatLegalFullName(emp)}
+                        </Link>
+                        {emp.preferredName && (
+                          <p className="text-xs text-gray-600">Preferred: {emp.preferredName}</p>
+                        )}
                       </div>
 
                       <div>
-                        <h3 className="font-semibold">
-                          {emp.firstName} {emp.lastName}
-                        </h3>
-                        <p className="text-sm text-gray-600">{emp.email}</p>
-                        <p className="text-sm text-gray-600">
-                          {emp.workAuthorization || "N/A"}
-                        </p>
+                        <p className="text-xs uppercase tracking-wide text-gray-500">SSN</p>
+                        <p className="text-sm text-gray-800">{emp.ssn || "N/A"}</p>
+                      </div>
+
+                      <div>
+                        <p className="text-xs uppercase tracking-wide text-gray-500">Work Authorization Title</p>
+                        <p className="text-sm text-gray-800">{emp.visaTitle || "N/A"}</p>
+                      </div>
+
+                      <div>
+                        <p className="text-xs uppercase tracking-wide text-gray-500">Phone Number</p>
+                        <p className="text-sm text-gray-800">{emp.cellPhone || "N/A"}</p>
+                      </div>
+
+                      <div>
+                        <p className="text-xs uppercase tracking-wide text-gray-500">Email</p>
+                        <p className="break-all text-sm text-gray-800">{emp.email || "N/A"}</p>
                       </div>
                     </div>
                   </div>

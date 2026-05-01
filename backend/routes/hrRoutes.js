@@ -4,6 +4,7 @@ const {
   getAllApplications,
   getApplicationsByStatus,
   getEmployeeProfiles,
+  getEmployeeProfileById,
   approveApplication,
   rejectApplication,
 } = require("../controllers/hrController");
@@ -15,6 +16,8 @@ router.get("/applications", getAllApplications);
 router.get("/applications/status/:status", getApplicationsByStatus);
 
 router.get("/employees", getEmployeeProfiles); 
+
+router.get("/employees/:id", getEmployeeProfileById);
 
 router.put("/applications/:id/approve", approveApplication);
 
