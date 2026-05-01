@@ -1,8 +1,53 @@
 const Onboarding = require("../models/Onboarding");
 const Employee = require("../models/employee");
 const Document = require("../models/document");
+const VisaStatus = require("../models/VisaStatus");
+
+const VISA_DOCUMENT_ORDER = ["OPT_RECEIPT", "OPT_EAD", "I_983", "I_20"];
+const OPT_WORK_AUTHORIZATIONS = ["OPT", "F1", "F1(CPT/OPT)"];
 
 const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+const normalizeWorkAuthorization = (value) =>
+  String(value || "").trim().toUpperCase();
+
+const isOptWorkAuthorization = (value) => {
+  const normalized = normalizeWorkAuthorization(value);
+  return OPT_WORK_AUTHORIZATIONS.some(
+    (option) => normalized === option || normalized.includes(option)
+  );
+};
+
+const getOptReceiptDocument = (documents = []) =>
+  documents.find((document) => {
+    const name = String(document?.name || document?.documentType || "")
+      .trim()
+      .toUpperCase()
+      .replace(/[\s-]+/g, "_");
+
+    return name === "OPT_RECEIPT" || name.includes("OPT_RECEIPT");
+  });
+
+const buildVisaWorkflowDocuments = (optReceiptDocument) =>
+  VISA_DOCUMENT_ORDER.map((documentType) => {
+    const baseDocument = {
+      documentType,
+      status: "not_uploaded",
+      fileUrl: "",
+      feedback: "",
+    };
+
+    if (documentType !== "OPT_RECEIPT" || !optReceiptDocument?.url) {
+      return baseDocument;
+    }
+
+    return {
+      ...baseDocument,
+      status: "pending",
+      fileUrl: optReceiptDocument.url,
+      fileName: optReceiptDocument.name || "OPT Receipt",
+    };
+  });
 
 const getAllApplications = async (req, res) => {
   try {
@@ -159,6 +204,27 @@ const approveApplication = async (req, res) => {
     application.status = "approved";
     application.feedback = "";
     await application.save();
+
+    if (isOptWorkAuthorization(application.workAuthorization)) {
+      const optReceiptDocument = getOptReceiptDocument(application.documents);
+
+      // The onboarding record is only the entry point; after approval the visa
+      // workflow is initialized and owned by VisaStatus.documents.
+      await VisaStatus.findOneAndUpdate(
+        { employee: application.user },
+        {
+          $set: {
+            employee: application.user,
+            onboarding: application._id,
+            workAuthorization: application.workAuthorization,
+            visaStartDate: application.visaStartDate,
+            visaEndDate: application.visaEndDate,
+            documents: buildVisaWorkflowDocuments(optReceiptDocument),
+          },
+        },
+        { new: true, upsert: true, runValidators: true }
+      );
+    }
 
     res.status(200).json({
       message: "Application approved successfully",

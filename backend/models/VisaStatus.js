@@ -15,8 +15,8 @@ const visaDocumentSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["not_started", "pending", "approved", "rejected"],
-      default: "not_started",
+      enum: ["not_uploaded", "not_started", "pending", "approved", "rejected"],
+      default: "not_uploaded",
     },
     feedback: {
       type: String,
@@ -41,6 +41,7 @@ const visaStatusSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
+      unique: true,
     },
     onboarding: {
       type: mongoose.Schema.Types.ObjectId,
@@ -60,10 +61,10 @@ const visaStatusSchema = new mongoose.Schema(
     documents: {
       type: [visaDocumentSchema],
       default: [
-        { documentType: "OPT_RECEIPT", status: "not_started" },
-        { documentType: "OPT_EAD", status: "not_started" },
-        { documentType: "I_983", status: "not_started" },
-        { documentType: "I_20", status: "not_started" },
+        { documentType: "OPT_RECEIPT", status: "not_uploaded", fileUrl: "", feedback: "" },
+        { documentType: "OPT_EAD", status: "not_uploaded", fileUrl: "", feedback: "" },
+        { documentType: "I_983", status: "not_uploaded", fileUrl: "", feedback: "" },
+        { documentType: "I_20", status: "not_uploaded", fileUrl: "", feedback: "" },
       ],
     },
   },

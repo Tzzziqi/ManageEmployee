@@ -21,10 +21,6 @@ const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 const normalizeLegacyDocumentStatuses = (documents) => {
   documents.forEach((document) => {
     document.documentType = LEGACY_DOCUMENT_TYPES[document.documentType] || document.documentType;
-
-    if (document.status === "not_uploaded") {
-      document.status = "not_started";
-    }
   });
 };
 
@@ -35,7 +31,7 @@ const canSendReminder = (previousStep, currentStep) => {
 
   return (
     previousStep.status === "approved" &&
-    currentStep.status === "not_started" &&
+    ["not_uploaded", "not_started"].includes(currentStep.status) &&
     !currentStep.fileUrl &&
     Date.now() - previousStep.approvedAt.getTime() >= REMINDER_DELAY_MS
   );
@@ -53,7 +49,7 @@ const getNextStep = (documents) => {
   return DOCUMENT_ORDER.map((documentType) =>
     documents.find((document) => document.documentType === documentType) || {
       documentType,
-      status: "not_started",
+      status: "not_uploaded",
     }
   ).find((document) => document.status !== "approved") || null;
 };
@@ -79,7 +75,7 @@ const toVisaViewModel = (visa) => {
 
   const documents = DOCUMENT_ORDER.map((documentType) => {
     const document = visa.documents.find((item) => item.documentType === documentType);
-    return document || { documentType, status: "not_started" };
+    return document || { documentType, status: "not_uploaded", fileUrl: "", feedback: "" };
   });
   const nextStep = getNextStep(documents);
   const nextStepIndex = nextStep ? DOCUMENT_ORDER.indexOf(nextStep.documentType) : -1;
@@ -257,7 +253,7 @@ const approveVisaDocument = async (req, res) => {
     );
 
     if (nextDoc && !nextDoc.fileUrl && nextDoc.status !== "pending") {
-      nextDoc.status = "not_started";
+      nextDoc.status = "not_uploaded";
     }
 
     await visa.save();
