@@ -82,15 +82,12 @@ const HREmployeeProfileDetailPage = () => {
             <div className="flex items-start justify-between gap-4">
               <div>
                 <h2 className="text-2xl font-bold">Employee Full Profile</h2>
-                <p className="mt-1 text-gray-600">
-                  Review complete employee details and uploaded documents.
-                </p>
               </div>
               <Link
                 to="/hr/employees"
                 className="rounded border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
               >
-                Back to Employee Profiles
+                Go Back
               </Link>
             </div>
           </div>
