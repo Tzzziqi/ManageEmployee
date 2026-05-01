@@ -1,27 +1,13 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import applicationService from "../../services/applicationService.ts";
 import axios from "axios";
-import authService, { type SignInProps, type SignUpProps } from "../../services/authService";
+import { signIn, signup } from "./authSlice.ts";
 
-export const signup = createAsyncThunk(
-    'auth/signup',
-    async (props: SignUpProps, thunkAPI) => {
+export const getApplication = createAsyncThunk(
+    'auth/getApplication',
+    async (_, thunkAPI) => {
         try {
-            return await authService.signup(props);
-        } catch (error) {
-            let message;
-            if (axios.isAxiosError(error)) {
-                message = error.response?.data?.message || error.message || 'Unknown error';
-            }
-            return thunkAPI.rejectWithValue(message);
-        }
-    }
-)
-
-export const signIn = createAsyncThunk(
-    'auth/signIn',
-    async (props: SignInProps, thunkAPI) => {
-        try {
-            return await authService.signIn(props);
+            return await applicationService.getApplication();
         } catch (error) {
             let message;
             if (axios.isAxiosError(error)) {
