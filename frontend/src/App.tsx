@@ -1,0 +1,26 @@
+import { Navigate, Route, Routes } from "react-router-dom";
+import HRApplicationsPage from "./pages/HRApplicationsPage";
+import HREmployeeProfilesPage from "./pages/HREmployeeProfilesPage";
+import HRVisaStatusPage from "./pages/HRVisaStatusPage";
+import RegistrationPage from "./pages/RegistrationPage";
+import VerifyInvitePage from "./pages/VerifyInvitePage";
+
+const App = () => {
+  return (
+    <Routes>
+      <Route path="/" element={<Navigate to="/hr/onboarding" replace />} />
+      <Route path="/hr" element={<Navigate to="/hr/onboarding" replace />} />
+
+      <Route path="/hr/onboarding" element={<HRApplicationsPage />} />
+      <Route path="/hr/employees" element={<HREmployeeProfilesPage />} />
+      <Route path="/hr/visa" element={<HRVisaStatusPage />} />
+
+      <Route path="/verify/:inviteToken" element={<VerifyInvitePage />} />
+      <Route path="/register/:inviteToken" element={<RegistrationPage />} />
+
+      <Route path="*" element={<Navigate to="/hr/onboarding" replace />} />
+    </Routes>
+  );
+};
+
+export default App;
