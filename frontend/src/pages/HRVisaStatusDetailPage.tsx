@@ -28,9 +28,6 @@ const HRVisaStatusDetailPage = () => {
   const { id } = useParams();
   const [visa, setVisa] = useState<VisaStatusRecord | null>(null);
   const [selectedType, setSelectedType] = useState<VisaDocument["documentType"] | null>(null);
-  const [approvedForNotification, setApprovedForNotification] = useState<
-    VisaDocument["documentType"] | null
-  >(null);
   const [feedback, setFeedback] = useState("");
   const [showFeedbackInput, setShowFeedbackInput] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -231,7 +228,9 @@ const HRVisaStatusDetailPage = () => {
                   </div>
                   <div>
                     <p className="text-xs uppercase text-gray-500">Email</p>
-                    <p className="break-all">{visa.employee?.email || visa.onboarding?.email || "N/A"}</p>
+                    <p className="break-all">
+                      {visa.employee?.email || visa.onboarding?.email || "N/A"}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -243,6 +242,7 @@ const HRVisaStatusDetailPage = () => {
                       documentType,
                       status: "not_started" as const,
                     };
+
                   const clickable = canOpenDocument(document);
 
                   return (
@@ -257,6 +257,7 @@ const HRVisaStatusDetailPage = () => {
                       className="rounded-xl border bg-white p-5 text-left shadow-sm transition enabled:hover:border-blue-300 enabled:hover:shadow disabled:cursor-not-allowed disabled:opacity-80"
                     >
                       <p className="text-lg font-semibold">{DOCUMENT_LABELS[documentType]}</p>
+
                       <span
                         className={`mt-3 inline-block rounded px-2 py-1 text-xs ${getStatusClass(
                           document.status
@@ -264,9 +265,13 @@ const HRVisaStatusDetailPage = () => {
                       >
                         {getStatusLabel(document.status)}
                       </span>
+
                       {document.feedback && (
-                        <p className="mt-3 text-sm text-red-700">Feedback: {document.feedback}</p>
+                        <p className="mt-3 text-sm text-red-700">
+                          Feedback: {document.feedback}
+                        </p>
                       )}
+
                       {!clickable && (
                         <p className="mt-3 text-xs text-gray-500">
                           {document.status === "rejected"
@@ -291,6 +296,7 @@ const HRVisaStatusDetailPage = () => {
                 <h3 className="text-xl font-bold">
                   {DOCUMENT_LABELS[selectedDocument.documentType]}
                 </h3>
+
                 <span
                   className={`mt-2 inline-block rounded px-2 py-1 text-xs ${getStatusClass(
                     selectedDocument.status
@@ -299,6 +305,7 @@ const HRVisaStatusDetailPage = () => {
                   {getStatusLabel(selectedDocument.status)}
                 </span>
               </div>
+
               <button
                 onClick={closeModal}
                 className="rounded border border-gray-300 px-3 py-1 text-sm text-gray-700 hover:bg-gray-50"
@@ -312,20 +319,36 @@ const HRVisaStatusDetailPage = () => {
 
               {selectedDocument.status === "pending" && (
                 <div className="space-y-3 border-t pt-4">
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
                     <button
                       onClick={handleApprove}
                       className="rounded bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700"
                     >
                       Approve
                     </button>
+
                     <button
                       onClick={() => setShowFeedbackInput(true)}
                       className="rounded bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
                     >
                       Reject
                     </button>
+
+                    {nextDocumentType && (
+                      <button
+                        onClick={handleSendNotification}
+                        className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                      >
+                        Send Notification
+                      </button>
+                    )}
                   </div>
+
+                  {nextDocumentType && (
+                    <p className="text-xs text-gray-600">
+                      Notify employee to upload {DOCUMENT_LABELS[nextDocumentType]}.
+                    </p>
+                  )}
 
                   {showFeedbackInput && (
                     <div className="space-y-2">
@@ -335,6 +358,7 @@ const HRVisaStatusDetailPage = () => {
                         placeholder="Feedback"
                         className="min-h-24 w-full rounded border px-3 py-2"
                       />
+
                       <button
                         onClick={handleReject}
                         disabled={!feedback.trim()}
@@ -347,19 +371,6 @@ const HRVisaStatusDetailPage = () => {
                 </div>
               )}
 
-              {selectedDocument.status === "approved" && nextDocumentType && (
-                <div className="border-t pt-4">
-                  <button
-                    onClick={handleSendNotification}
-                    className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-                  >
-                    Send Notification
-                  </button>
-                  <p className="mt-2 text-xs text-gray-600">
-                    Notify employee to upload {DOCUMENT_LABELS[nextDocumentType]}.
-                  </p>
-                </div>
-              )}
             </div>
           </div>
         </div>
