@@ -4,8 +4,15 @@ const router       = express.Router();
 const authMiddleware = require('../middlewares/authMiddleware');  
 const requireRole  = require('../middlewares/roleMiddleware');
 const {
-  getProfile, updateAddress, updateEmergencyContact,
-  getUploadUrl, confirmUpload, getVisaStatus
+  getProfile,
+  updateName,
+  updateAddress,
+  updateContact,
+  updateEmergencyContact,
+  updateEmployment,
+  getUploadUrl,
+  confirmUpload,
+  getVisaStatus
 } = require('../controllers/employeeController');
 
 const employeeOrHR = [authMiddleware, requireRole('employee', 'hr')];

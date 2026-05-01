@@ -1,5 +1,6 @@
-const Employee = require('../models/Employee');
-const Document = require('../models/Document');
+const Employee = require('../models/employee');
+const Document = require('../models/document');
+const VisaStatus = require('../models/VisaStatus');
 const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 const { v4: uuidv4 } = require('uuid');
@@ -164,23 +165,27 @@ const confirmUpload = async (req, res) => {
 const getVisaStatus = async (req, res) => {
     try {
         const employee = await Employee.findOne({ userId: req.user._id });
+        if (!employee) {
+            return res.status(404).json({ message: 'Profile not Found' });
+        }
+
         if (employee.visaType !== 'F1(CPT/OPT)') {
             return res.json({ isOPT: false }); //if not F1, forntend will not render.
         }
-        const docs = await Document.find({
-            employeeId: employee._id,
-            type: { $in: ['OPT_RECEIPT', 'OPT_EAD', 'I983', 'I20'] }
-        });
-        // Transform the docs array into a map so you can use key:value to get doc info. 
+
+        const visaStatus = await VisaStatus.findOne({ employee: req.user._id });
+        const docs = visaStatus?.documents || [];
         const docMap = {};
-        docs.forEach(d=> { docMap[d.type] = d; });
+        docs.forEach((document) => {
+            docMap[document.documentType] = document;
+        });
 
         res.json({
             isOPT: true,
             OPT_RECEIPT: docMap['OPT_RECEIPT'] || null,
             OPT_EAD: docMap['OPT_EAD'] || null,
-            I983: docMap['I983'] || null,
-            I20: docMap['I20'] || null
+            I_983: docMap['I_983'] || null,
+            I_20: docMap['I_20'] || null
         });
     } catch(error) {
         res.status(500).json({ message: error.message });

@@ -10,7 +10,7 @@ const cors = require("cors");
 var visaRoutes = require("./routes/visaRoutes");
 
 const authRouter = require("./routes/authRoutes");
-// const employeeRoutes = require("./routes/employeeRoutes");
+const employeeRoutes = require("./routes/employeeRoutes");
 const hrRoutes = require("./routes/hrRoutes");
 
 const app = express();
@@ -36,7 +36,7 @@ app.use("/api/hr/visa", visaRoutes);
 app.use("/api/test", require("./routes/testRoutes"));
 
 app.use("/api/auth", authRouter);
-// app.use("/api/employee", employeeRoutes);
+app.use("/api/employee", employeeRoutes);
 app.use("/api/hr", hrRoutes);
 
 app.use(function (req, res, next) {

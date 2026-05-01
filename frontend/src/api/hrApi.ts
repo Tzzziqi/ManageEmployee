@@ -99,6 +99,53 @@ export interface EmployeeProfileResponse {
   }>;
 }
 
+export interface VisaDocument {
+  documentType: "OPT_RECEIPT" | "OPT_EAD" | "I_983" | "I_20";
+  status: "not_started" | "not_uploaded" | "pending" | "approved" | "rejected";
+  fileName?: string;
+  fileUrl?: string;
+  feedback?: string;
+  uploadedAt?: string;
+  reviewedAt?: string;
+  approvedAt?: string;
+}
+
+export interface VisaStatusRecord {
+  _id: string;
+  employee?: {
+    username?: string;
+    email?: string;
+  };
+  onboarding?: {
+    firstName?: string;
+    lastName?: string;
+    middleName?: string;
+    preferredName?: string;
+    email?: string;
+    workAuthorization?: string;
+    visaStartDate?: string;
+    visaEndDate?: string;
+  };
+  workAuthorization?: string;
+  visaStartDate?: string;
+  visaEndDate?: string;
+  daysRemaining: number | null;
+  documents: VisaDocument[];
+  approvedDocuments: VisaDocument[];
+  nextStep: VisaDocument | null;
+}
+
+export interface VisaStatusesResponse {
+  employees: VisaStatusRecord[];
+  page: number;
+  totalPages: number;
+  total: number;
+}
+
+export interface VisaStatusDetailResponse {
+  visa: VisaStatusRecord;
+}
+
 export const getAllApplications = async (
   page: number = 1
 ): Promise<ApplicationsResponse> => {
@@ -167,17 +214,26 @@ export const rejectApplication = async (
 // visa
 export const getVisaStatuses = async (
   view: "in-progress" | "all",
-  page: number = 1
-) => {
+  page: number = 1,
+  keyword: string = ""
+): Promise<VisaStatusesResponse> => {
   const endpoint = view === "in-progress" ? "in-progress" : "all";
 
   const res = await axiosInstance.get(`/hr/visa/${endpoint}`, {
     params: {
+      keyword,
       page,
       limit: 5,
     },
   });
 
+  return res.data;
+};
+
+export const getVisaStatusById = async (
+  id: string
+): Promise<VisaStatusDetailResponse> => {
+  const res = await axiosInstance.get(`/hr/visa/${id}`);
   return res.data;
 };
 
@@ -211,6 +267,17 @@ export const sendVisaReminder = async (
 ) => {
   const res = await axiosInstance.post(
     `/hr/visa/${id}/documents/${documentType}/remind`
+  );
+
+  return res.data;
+};
+
+export const sendVisaNextStepNotification = async (
+  id: string,
+  documentType: string
+) => {
+  const res = await axiosInstance.post(
+    `/hr/visa/${id}/documents/${documentType}/notify-next`
   );
 
   return res.data;

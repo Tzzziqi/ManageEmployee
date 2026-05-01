@@ -1,32 +1,10 @@
 import { useEffect, useState } from "react";
-import {
-  approveVisaDoc,
-  getVisaStatuses,
-  rejectVisaDoc,
-  sendVisaReminder,
-} from "../api/hrApi";
+import { useNavigate } from "react-router-dom";
+import { getVisaStatuses, type VisaStatusRecord } from "../api/hrApi";
 import HRSidebar from "../components/HRSidebar";
 import Pagination from "../components/Pagination";
 
-const DOCUMENT_ORDER = ["OPT_RECEIPT", "OPT_EAD", "I_983", "I_20"];
-
 type VisaView = "in-progress" | "all";
-
-interface VisaDocument {
-  documentType: string;
-  status: "not_started" | "not_uploaded" | "pending" | "approved" | "rejected";
-  fileUrl?: string;
-  approvedAt?: string;
-}
-
-interface VisaStatusEmployee {
-  _id: string;
-  employee?: {
-    username?: string;
-    email?: string;
-  };
-  documents: VisaDocument[];
-}
 
 const getInitialPage = () => {
   const params = new URLSearchParams(window.location.search);
@@ -39,19 +17,30 @@ const getInitialView = (): VisaView => {
   return params.get("view") === "all" ? "all" : "in-progress";
 };
 
+const getInitialSearch = () => {
+  const params = new URLSearchParams(window.location.search);
+  return params.get("keyword") || "";
+};
+
 const HRVisaStatusPage = () => {
-  const [employees, setEmployees] = useState<VisaStatusEmployee[]>([]);
+  const navigate = useNavigate();
+  const [employees, setEmployees] = useState<VisaStatusRecord[]>([]);
   const [loading, setLoading] = useState(false);
   const [view, setView] = useState<VisaView>(getInitialView);
-
+  const [search, setSearch] = useState(getInitialSearch);
   const [page, setPage] = useState(getInitialPage);
   const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
 
-  const updateUrl = (newView: VisaView, newPage: number) => {
+  const updateUrl = (newView: VisaView, newPage: number, keyword: string) => {
     const params = new URLSearchParams();
 
     if (newView !== "in-progress") {
       params.set("view", newView);
+    }
+
+    if (keyword.trim()) {
+      params.set("keyword", keyword.trim());
     }
 
     if (newPage !== 1) {
@@ -69,90 +58,76 @@ const HRVisaStatusPage = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-
-      const data = await getVisaStatuses(view, page);
+      const data = await getVisaStatuses(view, page, search);
 
       setEmployees(data.employees || []);
       setTotalPages(data.totalPages || 1);
-      updateUrl(view, page);
+      setTotal(data.total || 0);
+      updateUrl(view, page, search);
     } catch (error: any) {
       console.error("Failed to fetch visa data:", error.response?.data || error);
-
-      alert(
-        error.response?.data?.error ||
-          error.response?.data?.message ||
-          "Failed to fetch visa data"
-      );
+      alert(error.response?.data?.message || "Failed to fetch visa data");
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchData();
-  }, [view, page]);
+    const timer = setTimeout(() => {
+      fetchData();
+    }, 250);
+
+    return () => clearTimeout(timer);
+  }, [view, page, search]);
 
   const handleViewChange = (value: VisaView) => {
     setView(value);
     setPage(1);
   };
 
-  const handleApprove = async (id: string, type: string) => {
-    try {
-      await approveVisaDoc(id, type);
-      fetchData();
-    } catch (err: any) {
-      alert(err.response?.data?.message || "Approve failed");
+  const formatDate = (value?: string) => {
+    if (!value) {
+      return "N/A";
     }
+
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? "N/A" : date.toLocaleDateString();
   };
 
-  const handleReject = async (id: string, type: string) => {
-    const feedback = prompt("Enter feedback");
-
-    if (!feedback) {
-      return;
+  const formatDaysRemaining = (days: number | null) => {
+    if (days === null || days === undefined) {
+      return "N/A";
     }
 
-    try {
-      await rejectVisaDoc(id, type, feedback);
-
-      fetchData();
-    } catch (err: any) {
-      alert(err.response?.data?.message || "Reject failed");
-    }
+    return days < 0 ? `${Math.abs(days)} days expired` : `${days} days`;
   };
 
-  const handleSendReminder = async (id: string, type: string) => {
-    try {
-      await sendVisaReminder(id, type);
-      alert("Reminder email sent successfully");
-    } catch (err: any) {
-      alert(err.response?.data?.message || "Failed to send reminder email");
-    }
+  const getLegalFullName = (employee: VisaStatusRecord) => {
+    const onboardingName = [
+      employee.onboarding?.firstName,
+      employee.onboarding?.middleName,
+      employee.onboarding?.lastName,
+    ]
+      .filter(Boolean)
+      .join(" ");
+
+    return onboardingName || employee.employee?.username || "Unknown employee";
   };
 
-  const getStatusColor = (status?: string) => {
-    if (status === "approved") return "bg-green-100 text-green-700";
-    if (status === "rejected") return "bg-red-100 text-red-700";
-    if (status === "pending") return "bg-yellow-100 text-yellow-700";
-    return "bg-gray-100 text-gray-500";
-  };
-
-  const canSendReminder = (
-    previousStep: VisaDocument | undefined,
-    currentStep: VisaDocument | undefined
-  ) => {
-    if (!previousStep?.approvedAt || !currentStep) {
-      return false;
+  const getResultText = () => {
+    if (loading) {
+      return "Loading...";
     }
 
-    return (
-      previousStep.status === "approved" &&
-      currentStep.status === "not_started" &&
-      !currentStep.fileUrl &&
-      Date.now() - new Date(previousStep.approvedAt).getTime() >=
-        3 * 24 * 60 * 60 * 1000
-    );
+    if (total === 0) {
+      return search.trim() ? `No records found for "${search}".` : "No records found.";
+    }
+
+    if (total === 1) {
+      return "1 record found.";
+    }
+
+    return `${total} records found.`;
   };
 
   return (
@@ -160,125 +135,93 @@ const HRVisaStatusPage = () => {
       <HRSidebar />
 
       <main className="flex-1 p-8">
-        <div className="mx-auto max-w-5xl">
-          <div className="mb-6 flex justify-between rounded-xl border bg-white p-6 shadow-sm">
-            <div>
-              <h2 className="text-2xl font-bold">Visa Status Management</h2>
-              <p className="mt-1 text-gray-600">
-                Manage employee visa documents and approvals.
-              </p>
-            </div>
+        <div className="mx-auto max-w-6xl">
+          <div className="mb-6 rounded-xl border bg-white p-6 shadow-sm">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <h2 className="text-2xl font-bold">Visa Status Management</h2>
+                <p className="mt-2 text-sm text-gray-700">{getResultText()}</p>
+              </div>
 
-            <select
-              value={view}
-              onChange={(e) => handleViewChange(e.target.value as VisaView)}
-              className="rounded border px-4 py-2"
-            >
-              <option value="in-progress">In Progress</option>
-              <option value="all">All</option>
-            </select>
+              <div className="flex flex-wrap items-center gap-3">
+                <input
+                  type="text"
+                  placeholder="Search"
+                  value={search}
+                  onChange={(event) => {
+                    setSearch(event.target.value);
+                    setPage(1);
+                  }}
+                  className="w-64 rounded border px-4 py-2"
+                />
+
+                <select
+                  value={view}
+                  onChange={(event) => handleViewChange(event.target.value as VisaView)}
+                  className="rounded border px-4 py-2"
+                >
+                  <option value="in-progress">In Progress</option>
+                  <option value="all">All</option>
+                </select>
+              </div>
+            </div>
           </div>
 
           {loading ? (
             <div className="rounded border bg-white p-6">Loading...</div>
           ) : employees.length === 0 ? (
-            <div className="rounded border bg-white p-6">No data</div>
+            <div className="rounded border bg-white p-6">
+              {search.trim() ? `No records found for "${search}".` : "No data"}
+            </div>
           ) : (
             <>
-              <div className="space-y-6">
-                {employees.map((emp) => (
-                  <div
-                    key={emp._id}
-                    className="rounded-xl border bg-white p-6 shadow-sm"
+              <div className="space-y-5">
+                {employees.map((employee) => (
+                  <button
+                    key={employee._id}
+                    onClick={() => navigate(`/hr/visa/${employee._id}`)}
+                    className="w-full rounded-xl border bg-white p-6 text-left shadow-sm transition hover:border-blue-300 hover:shadow"
                   >
-                    <div className="mb-4">
-                      <h3 className="text-lg font-bold">
-                        {emp.employee?.username || "Unknown employee"}
-                      </h3>
-                      <p className="text-sm text-gray-600">
-                        {emp.employee?.email || "No email"}
-                      </p>
+                    <div className="grid grid-cols-1 gap-5 md:grid-cols-[1.4fr_1fr_1fr_1fr_0.8fr]">
+                      <div>
+                        <p className="text-xs uppercase text-gray-500">Legal Full Name</p>
+                        <p className="font-semibold">{getLegalFullName(employee)}</p>
+                        <p className="break-all text-sm text-gray-600">
+                          {employee.employee?.email || employee.onboarding?.email || "N/A"}
+                        </p>
+                      </div>
+
+                      <div>
+                        <p className="text-xs uppercase text-gray-500">Title</p>
+                        <p className="font-semibold">{employee.workAuthorization || "N/A"}</p>
+                      </div>
+
+                      <div>
+                        <p className="text-xs uppercase text-gray-500">Start Date</p>
+                        <p className="text-sm text-gray-700">
+                          {formatDate(employee.visaStartDate)}
+                        </p>
+                      </div>
+
+                      <div>
+                        <p className="text-xs uppercase text-gray-500">End Date</p>
+                        <p className="text-sm text-gray-700">
+                          {formatDate(employee.visaEndDate)}
+                        </p>
+                      </div>
+
+                      <div>
+                        <p className="text-xs uppercase text-gray-500">Days Remaining</p>
+                        <p className="font-semibold">
+                          {formatDaysRemaining(employee.daysRemaining)}
+                        </p>
+                      </div>
                     </div>
-
-                    <div className="grid grid-cols-4 gap-4">
-                      {DOCUMENT_ORDER.map((type) => {
-                        const doc = emp.documents.find(
-                          (item) => item.documentType === type
-                        );
-                        const previousType =
-                          DOCUMENT_ORDER[DOCUMENT_ORDER.indexOf(type) - 1];
-                        const previousDoc = emp.documents.find(
-                          (item) => item.documentType === previousType
-                        );
-                        const status =
-                          doc?.status === "not_uploaded"
-                            ? "not_started"
-                            : doc?.status || "not_started";
-
-                        return (
-                          <div key={type} className="rounded border p-3">
-                            <p className="mb-1 text-sm font-semibold">
-                              {type}
-                            </p>
-
-                            <span
-                              className={`rounded px-2 py-1 text-xs ${getStatusColor(
-                                status
-                              )}`}
-                            >
-                              {status}
-                            </span>
-
-                            {doc?.fileUrl && (
-                              <a
-                                href={doc.fileUrl}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="mt-2 block text-xs text-blue-500"
-                              >
-                                Preview
-                              </a>
-                            )}
-
-                            {canSendReminder(previousDoc, doc) && (
-                              <button
-                                onClick={() => handleSendReminder(emp._id, type)}
-                                className="mt-2 w-full rounded bg-blue-600 py-1 text-xs text-white hover:bg-blue-700"
-                              >
-                                Send Reminder
-                              </button>
-                            )}
-
-                            {status === "pending" && (
-                              <div className="mt-2 space-y-1">
-                                <button
-                                  onClick={() => handleApprove(emp._id, type)}
-                                  className="w-full rounded bg-green-600 py-1 text-xs text-white"
-                                >
-                                  Approve
-                                </button>
-
-                                <button
-                                  onClick={() => handleReject(emp._id, type)}
-                                  className="w-full rounded bg-red-600 py-1 text-xs text-white"
-                                >
-                                  Reject
-                                </button>
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
+                  </button>
                 ))}
               </div>
 
-              <Pagination
-                page={page}
-                totalPages={totalPages}
-                onPageChange={setPage}
-              />
+              <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
             </>
           )}
         </div>
