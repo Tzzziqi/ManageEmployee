@@ -16,7 +16,7 @@ function App() {
                 <Route path="/register/:inviteToken" element={ <RegistrationPage/> }/>
                 <Route path="/signin" element={ <SignInPage/> }/>
                 <Route path="/application" element={ <MyApplicationPage/> }/>
-                <Route path="/profile" element={<PersonalInfoPage/>}/>
+                <Route path="/employee/profile" element={<PersonalInfoPage/>}/>
                 <Route path="/employee/visa-status" element={<VisaStatusPage />} />
                 <Route path='*' element={ <Navigate to="/signin" /> }/>
             </Routes>
