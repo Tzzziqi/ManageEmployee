@@ -8,12 +8,20 @@ const DOCUMENT_LABELS = {
   I_983: "I-983",
   I_20: "I-20",
 };
+const LEGACY_DOCUMENT_TYPES = {
+  I983: "I_983",
+  I20: "I_20",
+  OPT_EDA: "OPT_EAD",
+  "-20": "I_20",
+};
 const REMINDER_DELAY_MS = 3 * 24 * 60 * 60 * 1000;
 
 const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 const normalizeLegacyDocumentStatuses = (documents) => {
   documents.forEach((document) => {
+    document.documentType = LEGACY_DOCUMENT_TYPES[document.documentType] || document.documentType;
+
     if (document.status === "not_uploaded") {
       document.status = "not_started";
     }
@@ -214,6 +222,8 @@ const approveVisaDocument = async (req, res) => {
       return res.status(404).json({ message: "Visa record not found" });
     }
 
+    normalizeLegacyDocumentStatuses(visa.documents);
+
     const doc = visa.documents.find(
       (d) => d.documentType === documentType
     );
@@ -221,8 +231,6 @@ const approveVisaDocument = async (req, res) => {
     if (!doc) {
       return res.status(400).json({ message: "Document not found" });
     }
-
-    normalizeLegacyDocumentStatuses(visa.documents);
 
     const index = DOCUMENT_ORDER.indexOf(documentType);
 

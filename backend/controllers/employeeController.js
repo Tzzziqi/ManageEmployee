@@ -1,5 +1,4 @@
 const Employee = require('../models/employee');
-const Document = require('../models/document');
 const VisaStatus = require('../models/VisaStatus');
 const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
@@ -22,11 +21,12 @@ const LEGACY_DOCUMENT_TYPES = {
 };
 
 const normalizeDocumentType = (docType) => LEGACY_DOCUMENT_TYPES[docType] || docType;
+const getUserId = (req) => req.user.id;
 
 // Get Employeee profile by userId and get from JWT Token for safty issue.
 const getProfile = async(req, res) => {
     try {
-        const employee = await Employee.findOne({ userId: req.user._id });
+        const employee = await Employee.findOne({ userId: getUserId(req) });
         if( !employee) return res.status(404).json({ message: 'Profile not Found'});
         res.json(employee); // 200 ok and return employee data
     } catch (error) {
@@ -41,7 +41,7 @@ const updateName = async (req, res) => {
             return res.status(400).json({ message: 'First name and last name are required' });
         }
         const employee = await Employee.findOneAndUpdate(
-            { userId: req.user._id },
+            { userId: getUserId(req) },
             { firstName, lastName, middleName, preferredName },
             { new: true }
         );
@@ -58,7 +58,7 @@ const updateContact = async (req, res) => {
             return res.status(400).json({ message: 'Cell phone is required' });
         }
         const employee = await Employee.findOneAndUpdate(
-            { userId: req.user._id },
+            { userId: getUserId(req) },
             { cellPhone, workPhone },
             { new: true }
         );
@@ -72,7 +72,7 @@ const updateEmployment = async (req, res) => {
     try {
         const { visaTitle, visaStart, visaEnd } = req.body;
         const employee = await Employee.findOneAndUpdate(
-            { userId: req.user._id },
+            { userId: getUserId(req) },
             { visaTitle, visaStart, visaEnd },
             { new: true }
         );
@@ -91,7 +91,7 @@ const updateAddress = async (req, res) => {
             return res.status(400).json({message: 'Street, city, state, zip are required'});
         }
         const employee = await Employee.findOneAndUpdate(
-            {userId: req.user._id },
+            {userId: getUserId(req) },
             {address: { building, street, city, state, zip }},
             {new: true, runValidators: true } // runValidators is from Mongoose, it will run the validation rules defined in the schema when updating.
         );
@@ -109,7 +109,7 @@ const updateEmergencyContact = async (req, res) => {
             return res.status(400).json({message: 'At least 1 emergncy contact required'});
         }
         const employee = await Employee.findOneAndUpdate(
-            {userId: req.user._id},
+            {userId: getUserId(req)},
             {emergencyContacts: emergencyContacts},
             {new:true}
         );
@@ -130,7 +130,7 @@ const getUploadUrl = async (req, res) => {
             return res.status(400).json({ message: 'Invalid document type' });
         }
 
-        const fileKey = `employee/${req.user._id}/${docType}/${uuidv4()}`; // unique file key for S3
+        const fileKey = `employee/${getUserId(req)}/${docType}/${uuidv4()}`; // unique file key for S3
         // PutObjectCommand = instruction for "I want to PUT a file to S3"
         // Not uploaded yet — just describes a future operation
         const command = new PutObjectCommand ({
@@ -155,12 +155,12 @@ const confirmUpload = async (req, res) => {
             return res.status(400).json({ message: 'Invalid document type' });
         }
 
-        const employee = await Employee.findOne({ userId: req.user._id }); 
+        const employee = await Employee.findOne({ userId: getUserId(req) }); 
         if (!employee) {
             return res.status(404).json({ message: 'Profile not Found' });
         }
 
-        const visaStatus = await VisaStatus.findOne({ employee: req.user._id });
+        const visaStatus = await VisaStatus.findOne({ employee: getUserId(req) });
         if (!visaStatus) {
             return res.status(404).json({ message: 'Visa status not found' });
         }
@@ -196,15 +196,11 @@ const confirmUpload = async (req, res) => {
         visaDocument.approvedAt = undefined;
         await visaStatus.save();
 
-        // create a new doc to track the file info in MongoDB, to tell HR,  initial status is pending 
-        const doc = await Document.create({
-            employeeId: employee._id,
-            type: docType,
-            fileUrl,
-            fileKey,
-            status: 'pending'
+        res.json({
+            message: `Document uploaded, waiting for HR approval`,
+            document: visaDocument,
+            visaStatus,
         });
-        res.json({message: `Document uploaded, waiting for HR approval`, document: doc});
     } catch (error) { 
         res.status(500).json({ message: error.message });
     }
@@ -212,7 +208,7 @@ const confirmUpload = async (req, res) => {
 
 const getVisaStatus = async (req, res) => {
     try {
-        const employee = await Employee.findOne({ userId: req.user._id });
+        const employee = await Employee.findOne({ userId: getUserId(req) });
         if (!employee) {
             return res.status(404).json({ message: 'Profile not Found' });
         }
@@ -221,7 +217,7 @@ const getVisaStatus = async (req, res) => {
             return res.json({ isOPT: false }); //if not F1, forntend will not render.
         }
 
-        const visaStatus = await VisaStatus.findOne({ employee: req.user._id });
+        const visaStatus = await VisaStatus.findOne({ employee: getUserId(req) });
         const docs = visaStatus?.documents || [];
         const docMap = {};
         docs.forEach((document) => {
