@@ -36,6 +36,11 @@ const HRApplicationsPage = () => {
   const [applications, setApplications] = useState<Onboarding[]>([]);
   const [statusFilter, setStatusFilter] = useState<string>(getInitialStatus);
   const [loading, setLoading] = useState(false);
+  const [selectedApplication, setSelectedApplication] =
+    useState<Onboarding | null>(null);
+  const [feedback, setFeedback] = useState("");
+  const [modalError, setModalError] = useState("");
+  const [actionLoading, setActionLoading] = useState(false);
 
   const [page, setPage] = useState(getInitialPage);
   const [totalPages, setTotalPages] = useState(1);
@@ -95,25 +100,93 @@ const HRApplicationsPage = () => {
     setPage(1);
   };
 
-  const handleApprove = async (id: string) => {
+  const openApplicationModal = (application: Onboarding) => {
+    setSelectedApplication(application);
+    setFeedback("");
+    setModalError("");
+  };
+
+  const closeApplicationModal = () => {
+    setSelectedApplication(null);
+    setFeedback("");
+    setModalError("");
+  };
+
+  const formatValue = (value?: string) => value || "N/A";
+
+  const formatDate = (value?: string) => {
+    if (!value) {
+      return "N/A";
+    }
+
+    return new Date(value).toLocaleDateString();
+  };
+
+  const detailRows = selectedApplication
+    ? [
+        ["First Name", selectedApplication.firstName],
+        ["Middle Name", selectedApplication.middleName],
+        ["Last Name", selectedApplication.lastName],
+        ["Preferred Name", selectedApplication.preferredName],
+        ["Email", selectedApplication.email],
+        ["Phone", selectedApplication.phone],
+        ["Street", selectedApplication.address?.street],
+        ["City", selectedApplication.address?.city],
+        ["State", selectedApplication.address?.state],
+        ["Zip", selectedApplication.address?.zip],
+        ["Work Authorization", selectedApplication.workAuthorization],
+        ["Visa Start Date", formatDate(selectedApplication.visaStartDate)],
+        ["Visa End Date", formatDate(selectedApplication.visaEndDate)],
+      ]
+    : [];
+
+  const handleApprove = async () => {
+    if (!selectedApplication) {
+      return;
+    }
+
+    // Feedback belongs only to rejection, so approval rejects non-empty notes.
+    if (feedback.trim()) {
+      setModalError("FeedBack only for Reject!");
+      return;
+    }
+
     try {
-      await approveApplication(id);
+      setActionLoading(true);
+      await approveApplication(selectedApplication._id);
       alert("Application approved successfully");
-      fetchApplications();
+      closeApplicationModal();
+      await fetchApplications();
     } catch (error) {
       console.error("Failed to approve application:", error);
       alert("Failed to approve application");
+    } finally {
+      setActionLoading(false);
     }
   };
 
-  const handleReject = async (id: string, feedback: string) => {
+  const handleReject = async () => {
+    if (!selectedApplication) {
+      return;
+    }
+
+    // Rejection requires feedback; approval above is the only path that forbids it.
+    if (!feedback.trim()) {
+      setModalError("Please enter feedback before rejecting.");
+      return;
+    }
+
     try {
-      await rejectApplication(id, feedback);
+      setActionLoading(true);
+      await rejectApplication(selectedApplication._id, feedback.trim());
       alert("Application rejected successfully");
-      fetchApplications();
+      closeApplicationModal();
+      await fetchApplications();
     } catch (error) {
       console.error("Failed to reject application:", error);
       alert("Failed to reject application");
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -157,8 +230,7 @@ const HRApplicationsPage = () => {
                   <OnboardingCard
                     key={application._id}
                     application={application}
-                    onApprove={handleApprove}
-                    onReject={handleReject}
+                    onView={openApplicationModal}
                   />
                 ))}
               </div>
@@ -172,6 +244,129 @@ const HRApplicationsPage = () => {
           )}
         </div>
       </main>
+
+      {/* Read-only application modal; pending records expose the HR decision controls. */}
+      {selectedApplication && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-6">
+          <div className="max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-xl bg-white shadow-xl">
+            <div className="sticky top-0 flex items-center justify-between border-b bg-white p-6">
+              <div>
+                <h2 className="text-2xl font-bold">View Application</h2>
+                <p className="text-gray-600">
+                  {selectedApplication.firstName} {selectedApplication.lastName}
+                </p>
+              </div>
+
+              <button
+                className="rounded-lg border px-4 py-2 hover:bg-gray-100"
+                onClick={closeApplicationModal}
+                disabled={actionLoading}
+              >
+                Close
+              </button>
+            </div>
+
+            <div className="space-y-6 p-6">
+              <section>
+                <h3 className="mb-3 text-lg font-semibold">
+                  Submitted Information
+                </h3>
+                <div className="grid grid-cols-1 gap-5 rounded-xl border bg-white p-5 md:grid-cols-2">
+                  {detailRows.map(([label, value]) => (
+                    <div key={label}>
+                      <p className="text-sm font-semibold text-gray-500">
+                        {label}
+                      </p>
+                      <p className="mt-1 text-gray-900">
+                        {formatValue(value)}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              <section>
+                <h3 className="mb-3 text-lg font-semibold">Documents</h3>
+                {selectedApplication.documents?.length ? (
+                  <div className="space-y-3">
+                    {selectedApplication.documents.map((document, index) => (
+                      <div
+                        key={`${document.name || "document"}-${index}`}
+                        className="flex items-center justify-between rounded-lg border bg-gray-50 p-4"
+                      >
+                        <span className="font-medium">
+                          {document.name || `Document ${index + 1}`}
+                        </span>
+                        {document.url ? (
+                          <a
+                            className="font-semibold text-blue-700 hover:underline"
+                            href={document.url}
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            View
+                          </a>
+                        ) : (
+                          <span className="text-gray-500">No file</span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="rounded-lg border bg-gray-50 p-4 text-gray-600">
+                    No documents uploaded.
+                  </div>
+                )}
+              </section>
+
+              {selectedApplication.status === "pending" && (
+                <section className="border-t pt-6">
+                  <label className="mb-2 block font-semibold" htmlFor="feedback">
+                    Feedback
+                  </label>
+                  <textarea
+                    id="feedback"
+                    className="w-full rounded-lg border p-3"
+                    rows={4}
+                    value={feedback}
+                    onChange={(event) => {
+                      setFeedback(event.target.value);
+                      setModalError("");
+                    }}
+                  />
+                  <p className="mt-2 text-sm text-gray-500">
+                    FeedBack for Reject
+                  </p>
+
+                  {modalError && (
+                    <p className="mt-3 font-semibold text-red-600">
+                      {modalError}
+                    </p>
+                  )}
+
+                  <div className="mt-5 flex gap-3">
+                    <button
+                      className="rounded-lg bg-green-600 px-5 py-2 font-semibold text-white hover:bg-green-700 disabled:opacity-60"
+                      onClick={handleApprove}
+                      disabled={actionLoading}
+                    >
+                      Approve
+                    </button>
+
+                    <button
+                      className="rounded-lg bg-red-600 px-5 py-2 font-semibold text-white hover:bg-red-700 disabled:opacity-60"
+                      onClick={handleReject}
+                      disabled={actionLoading}
+                    >
+                      Reject
+                    </button>
+                  </div>
+                </section>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

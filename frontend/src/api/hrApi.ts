@@ -8,9 +8,19 @@ export interface Onboarding {
   preferredName?: string;
   email: string;
   phone?: string;
+  address?: {
+    street?: string;
+    city?: string;
+    state?: string;
+    zip?: string;
+  };
   workAuthorization?: string;
   visaStartDate?: string;
   visaEndDate?: string;
+  documents?: Array<{
+    name?: string;
+    url?: string;
+  }>;
   status: "pending" | "approved" | "rejected";
   feedback?: string;
   createdAt?: string;
