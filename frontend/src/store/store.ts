@@ -3,6 +3,9 @@ import { FLUSH, PAUSE, PERSIST, persistReducer, persistStore, PURGE, REGISTER, R
 import inviteReducer from './slices/inviteSlice'
 import authReducer from './slices/authSlice'
 
+import profileReducer from './slices/profileSlice';
+import visaReducer    from './slices/visaSlice';  
+
 const storage = {
     getItem: (key: string) => Promise.resolve(localStorage.getItem(key)),
     setItem: (key: string, value: string) => Promise.resolve(localStorage.setItem(key, value)),
@@ -12,6 +15,8 @@ const storage = {
 const rootReducer = combineReducers({
     invite: inviteReducer,
     auth: authReducer,
+    profile: profileReducer,
+    visa: visaReducer
 });
 
 const persistConfig = {
@@ -23,7 +28,6 @@ const persistConfig = {
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
 
-// 4. 設定 Store
 export const store = configureStore({
     reducer: persistedReducer,
     middleware: (getDefaultMiddleware) =>
