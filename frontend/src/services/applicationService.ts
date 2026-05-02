@@ -27,7 +27,7 @@ export interface applicationRequest {
             ssn: string
         },
         workAuthorization: {
-            isCitizenOrPR: boolean,
+            isCitizenOrPR: string,
             citizenType: string,
             workAuthType: string,
             otherVisaTitle: string,
@@ -68,6 +68,7 @@ export interface applicationRequest {
             }
         }
     }
+
 }
 
 export interface S3PresignedUrlRequest {

@@ -63,7 +63,7 @@ const toDocumentObject = (documents = {}) => {
 const toWorkAuthorizationDetail = (workAuthorization, fallback = {}) => {
     if (workAuthorization && typeof workAuthorization === "object") {
         return {
-            isCitizenOrPR: workAuthorization.isCitizenOrPR ?? "",
+            isCitizenOrPR: workAuthorization.isCitizenOrPR || "",
             citizenType: workAuthorization.citizenType || "",
             workAuthType: workAuthorization.workAuthType || "",
             otherVisaTitle: workAuthorization.otherVisaTitle || "",

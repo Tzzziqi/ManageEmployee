@@ -84,7 +84,7 @@ const MyStepForm = ({ initialValues, isReadOnly, status }: { initialValues: any,
                     },
                     workAuthorization: {
                         ...rawData.workAuthorization,
-                        isCitizenOrPR: rawData.workAuthorization?.isCitizenOrPR === 'yes',
+                        isCitizenOrPR: rawData.workAuthorization?.isCitizenOrPR,
                         startDate: toDate(rawData.workAuthorization?.startDate),
                         endDate: toDate(rawData.workAuthorization?.endDate),
                     },

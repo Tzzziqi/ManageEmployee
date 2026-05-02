@@ -22,7 +22,7 @@ const ApplicationPage = () => {
             try {
                 const response = await dispatch(getApplication()).unwrap();
                 if (response && response.status === 'approved') {
-                    navigate('/employee/visa-status', { replace: true });
+                    navigate('/employee/profile', { replace: true });
                 } else {
                     setAppData(response);
                 }
