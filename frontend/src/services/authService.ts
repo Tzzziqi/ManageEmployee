@@ -15,6 +15,7 @@ export interface SignInProps {
 
 const normalizeAuthData = (data: any) => ({
     token: data?.token || null,
+    id: data?.id || data?.user?.id || null,
     username: data?.username || data?.user?.username || null,
     email: data?.email || data?.user?.email || null,
     role: data?.role || data?.user?.role || null,
