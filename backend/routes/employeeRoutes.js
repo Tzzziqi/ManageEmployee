@@ -11,6 +11,7 @@ const {
   updateEmergencyContact,
   updateEmployment,
   getUploadUrl,
+  uploadDocument,
   confirmUpload,
   getVisaStatus
 } = require('../controllers/employeeController');
@@ -26,6 +27,7 @@ router.put('/profile/contact',            ...employeeOrHR, updateContact);
 router.put('/profile/employment',         ...employeeOrHR, updateEmployment);
 
 router.post('/documents/upload-url',      ...employeeOrHR, getUploadUrl);
+router.post('/documents/upload',          ...employeeOrHR, express.raw({ type: () => true, limit: '10mb' }), uploadDocument);
 router.post('/documents/confirm',         ...employeeOrHR, confirmUpload);
 
 router.get('/visa-status',                ...employeeOrHR, getVisaStatus);

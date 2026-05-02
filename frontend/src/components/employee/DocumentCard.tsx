@@ -44,7 +44,8 @@ const DocumentCard = ({ lable, doc, docType, canUpload, showTemplates }: Props) 
             await dispatch(uploadDocument({ file, docType })).unwrap();
             toast.success('Uploaded! Waiting for HR approval.');
             dispatch(fetchVisaStatus());
-        } catch {toast.error('Upload failed. Please try again.');
+        } catch (error) {
+            toast.error(String(error || 'Upload failed. Please try again.'));
     }
     e.target.value = '';
 };
