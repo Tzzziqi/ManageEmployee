@@ -1,4 +1,5 @@
-import { Form, Input, Row, Col, Typography, Space, message, Upload, Button, Spin } from 'antd';
+import { Form, Input, Row, Col, Typography, Space, message, Upload, Button } from 'antd';
+import type { UploadProps } from 'antd';
 import { UserOutlined, ContactsOutlined, HomeOutlined, UploadOutlined } from '@ant-design/icons';
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -48,6 +49,7 @@ const BasicInfoForm = ({ isReadOnly }: { isReadOnly: boolean }) => {
         return isJpgOrPng && isLt2M;
     };
 
+
     const handleChange = async (info: any) => {
         if (isReadOnly) return;
 
@@ -55,6 +57,7 @@ const BasicInfoForm = ({ isReadOnly }: { isReadOnly: boolean }) => {
             setLoading(true);
             return;
         }
+
         const file = info.file.originFileObj;
         if (!file) return;
 

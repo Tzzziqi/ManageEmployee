@@ -13,14 +13,21 @@ export interface SignInProps {
     password: string;
 }
 
+const normalizeAuthData = (data: any) => ({
+    token: data?.token || null,
+    username: data?.username || data?.user?.username || null,
+    email: data?.email || data?.user?.email || null,
+    role: data?.role || data?.user?.role || null,
+});
+
 const authService = {
     signup: async (props: SignUpProps) => {
         const response = await axiosInstance.post(`/auth/register/${props.inviteToken}`, props.userData);
-        return response.data.data;
+        return normalizeAuthData(response.data.data);
     },
     signIn: async (props: SignInProps) => {
         const response = await axiosInstance.post('/auth/signIn', props);
-        return response.data.data;
+        return normalizeAuthData(response.data.data);
     }
 }
 

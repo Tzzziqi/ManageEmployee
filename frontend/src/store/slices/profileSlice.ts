@@ -95,11 +95,7 @@ const initialState: ProfileState = {
 // ======= slice: define teh states and my reducer's logic =======
 const profileSlice = createSlice({
     name:'profile',
-    initialState:{
-        data: null as any,
-        loading: false,
-        error: null as string | null,
-    },
+    initialState,
     reducers: {}, // empty, cause the profile data comes from bacnkedGET, and stroed at state.data,no UI action needed.
 
     extraReducers: (builder) => {

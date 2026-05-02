@@ -21,7 +21,7 @@ const EmploymentSection = () => {
     visaEnd:   data?.visaEnd   ? data.visaEnd.slice(0, 10)   : '',
   };
 
-  const { register, handleSubmit, reset, formState: { errors } } = useForm({ defaultValues });
+  const { register, handleSubmit, reset } = useForm({ defaultValues });
 
   const handleStartEdit = () => reset(defaultValues);
 

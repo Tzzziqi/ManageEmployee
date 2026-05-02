@@ -12,8 +12,8 @@ const DocumentsSection = () => {
     { label: 'Work Authorization', type: 'WORK_AUTH' },
     { label: 'OPT Receipt',        type: 'OPT_RECEIPT'  },
     { label: 'OPT EAD',            type: 'OPT_EAD'      },
-    { label: 'I-983',              type: 'I983'          },
-    { label: 'I-20',               type: 'I20'           },
+    { label: 'I-983',              type: 'I_983'         },
+    { label: 'I-20',               type: 'I_20'          },
   ];
   // only show uploded files. Filter + some logic
   const uploadedDocs = docList.filter(d => documents.some((doc: any) => doc.type === d.type)
@@ -33,7 +33,7 @@ const DocumentsSection = () => {
               const doc = documents.find((d: any) => d.type === type);
 
               return (
-                //type is stable string, key=I20, this div is I20
+                // type is stable string, key=I_20, this div is I-20
                 <div
                   key={type}
                   className="flex items-center justify-between px-4 py-3 bg-gray-50 rounded-lg border border-gray-100"

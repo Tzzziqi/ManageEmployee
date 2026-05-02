@@ -3,7 +3,6 @@
 import { useDispatch, useSelector } from 'react-redux';
 import { uploadDocument, fetchVisaStatus } from '@/store/slices/visaSlice';
 import type { RootState, AppDispatch } from '../../store/store';
-import { Badge } from '@/components/ui/badge';
 import toast from 'react-hot-toast';
 
 interface Props {
@@ -22,14 +21,14 @@ const getCardStyle = (status: string | null) => {
 const pendingMessages: any = {
     OPT_RECEIPT: 'Waiting for HR to approve your OPT Receipt.',
     OPT_EAD:     'Waiting for HR to approve your OPT EAD.',
-    I983:        'Waiting for HR to approve and sign your I-983.',
-    I20:         'Waiting for HR to approve your I-20.',
+    I_983:       'Waiting for HR to approve and sign your I-983.',
+    I_20:        'Waiting for HR to approve your I-20.',
     };
 const approvedMessages: any = {
     OPT_RECEIPT: 'Please upload a copy of your OPT EAD.',
     OPT_EAD:     'Please download and fill out the I-983 form.',
-    I983:        'Please send the I-983 along with all necessary documents to your school and upload the new I-20.',
-    I20:         'All documents have been approved.',
+    I_983:       'Please send the I-983 along with all necessary documents to your school and upload the new I-20.',
+    I_20:        'All documents have been approved.',
     };
     
     

@@ -1,5 +1,5 @@
-const Employee = require('../models/Employee');
-const Document = require('../models/Document');
+const Employee = require('../models/employee');
+const VisaStatus = require('../models/VisaStatus');
 const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 const { v4: uuidv4 } = require('uuid');
@@ -12,34 +12,21 @@ const s3 = new S3Client({
   }
 });
 
-const updateOnboardingStatus = async (req, res) => {
-  try {
-    const { employeeId, status, feedback } = req.body;
-    if (!['approved', 'rejected'].includes(status)) {
-      return res.status(400).json({ message: 'Invalid status' });
-    }
-
-    const employee = await Employee.findByIdAndUpdate(
-      employeeId,
-      {
-        onboardingStatus: status,
-        onboardingFeedback: feedback || ''
-      },
-      { new: true }
-    );
-
-    if (!employee) return res.status(404).json({ message: 'Employee not found' });
-
-    res.json({ message: `Onboarding ${status}`, employee });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
+const VISA_DOCUMENT_ORDER = ['OPT_RECEIPT', 'OPT_EAD', 'I_983', 'I_20'];
+const LEGACY_DOCUMENT_TYPES = {
+    I983: 'I_983',
+    I20: 'I_20',
+    OPT_EDA: 'OPT_EAD',
+    '-20': 'I_20',
 };
+
+const normalizeDocumentType = (docType) => LEGACY_DOCUMENT_TYPES[docType] || docType;
+const getUserId = (req) => req.user.id;
 
 // Get Employeee profile by userId and get from JWT Token for safty issue.
 const getProfile = async(req, res) => {
     try {
-        const employee = await Employee.findOne({ userId: req.user.id });
+        const employee = await Employee.findOne({ userId: getUserId(req) });
         if( !employee) return res.status(404).json({ message: 'Profile not Found'});
 
         const documents = await Document.find({ employeeId: employee._id });
@@ -52,16 +39,16 @@ const getProfile = async(req, res) => {
 
 const updateName = async (req, res) => {
     try {
-        const { firstName, lastName, middleName, preferredName, ssn, dateOfBirth, gender } = req.body;
+        const { firstName, lastName, middleName, preferredName } = req.body;
         if (!firstName || !lastName) {
             return res.status(400).json({ message: 'First name and last name are required' });
         }
         const employee = await Employee.findOneAndUpdate(
-            { userId: req.user.id },
-            { firstName, lastName, middleName, preferredName, ssn, dateOfBirth, gender },
+            { userId: getUserId(req) },
+            { firstName, lastName, middleName, preferredName },
             { new: true }
         );
-        res.json({ message: 'Name updated', data: { firstName, lastName, middleName, preferredName, ssn, dateOfBirth, gender } });
+        res.json({ message: 'Name updated', data: { firstName, lastName, middleName, preferredName } });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -74,7 +61,7 @@ const updateContact = async (req, res) => {
             return res.status(400).json({ message: 'Cell phone is required' });
         }
         const employee = await Employee.findOneAndUpdate(
-            { userId: req.user.id },
+            { userId: getUserId(req) },
             { cellPhone, workPhone },
             { new: true }
         );
@@ -88,7 +75,7 @@ const updateEmployment = async (req, res) => {
     try {
         const { visaTitle, visaStart, visaEnd } = req.body;
         const employee = await Employee.findOneAndUpdate(
-            { userId: req.user.id },
+            { userId: getUserId(req) },
             { visaTitle, visaStart, visaEnd },
             { new: true }
         );
@@ -107,7 +94,7 @@ const updateAddress = async (req, res) => {
             return res.status(400).json({message: 'Street, city, state, zip are required'});
         }
         const employee = await Employee.findOneAndUpdate(
-            {userId: req.user.id },
+            {userId: getUserId(req) },
             {address: { building, street, city, state, zip }},
             {new: true, runValidators: true } // runValidators is from Mongoose, it will run the validation rules defined in the schema when updating.
         );
@@ -125,7 +112,7 @@ const updateEmergencyContact = async (req, res) => {
             return res.status(400).json({message: 'At least 1 emergncy contact required'});
         }
         const employee = await Employee.findOneAndUpdate(
-            {userId: req.user.id},
+            {userId: getUserId(req)},
             {emergencyContacts: emergencyContacts},
             {new:true}
         );
@@ -139,8 +126,14 @@ const updateEmergencyContact = async (req, res) => {
 // First get the S3 Presigned URL before upload the file to S3, then save the file info to MongoDB.
 const getUploadUrl = async (req, res) => {
     try {
-        const { fileType, docType } = req.body;
-        const fileKey = `employee/${req.user.id}/${docType}/${uuidv4()}`; // unique file key for S3
+        const { fileType } = req.body;
+        const docType = normalizeDocumentType(req.body.docType);
+
+        if (!VISA_DOCUMENT_ORDER.includes(docType)) {
+            return res.status(400).json({ message: 'Invalid document type' });
+        }
+
+        const fileKey = `employee/${getUserId(req)}/${docType}/${uuidv4()}`; // unique file key for S3
         // PutObjectCommand = instruction for "I want to PUT a file to S3"
         // Not uploaded yet — just describes a future operation
         const command = new PutObjectCommand ({
@@ -158,57 +151,88 @@ const getUploadUrl = async (req, res) => {
 // Step2: After file is uploaded to S3, save the file info to MongoDB
 const confirmUpload = async (req, res) => {
     try {
-        const {fileKey, docType} = req.body;
-        const employee = await Employee.findOne({ userId: req.user.id }); 
-        const optOrder = ['OPT_RECEIPT', 'OPT_EAD', 'I983', 'I20'];
-        const idx = optOrder.indexOf(docType);
+        const {fileKey} = req.body;
+        const docType = normalizeDocumentType(req.body.docType);
+
+        if (!VISA_DOCUMENT_ORDER.includes(docType)) {
+            return res.status(400).json({ message: 'Invalid document type' });
+        }
+
+        const employee = await Employee.findOne({ userId: getUserId(req) }); 
+        if (!employee) {
+            return res.status(404).json({ message: 'Profile not Found' });
+        }
+
+        const visaStatus = await VisaStatus.findOne({ employee: getUserId(req) });
+        if (!visaStatus) {
+            return res.status(404).json({ message: 'Visa status not found' });
+        }
+
+        const idx = VISA_DOCUMENT_ORDER.indexOf(docType);
         // opt recipt do not need to be approved, idx=== -1 means docType not in optOrder,do not need check. 
         if(idx > 0) {
-            const preDoc = await Document.findOne({
-                employeeId: employee._id,
-                type: optOrder[idx - 1],  
-                status: 'approved'   
-            });
+            const preDoc = visaStatus.documents.find((document) => (
+                document.documentType === VISA_DOCUMENT_ORDER[idx - 1]
+            ));
             if (!preDoc) {
-                return res.status(400).json({message: `Please wait for ${optOrder[idx-1]} to be approved first`});
+                return res.status(400).json({message: `Please wait for ${VISA_DOCUMENT_ORDER[idx-1]} to be approved first`});
+            }
+
+            if (preDoc.status !== 'approved') {
+                return res.status(400).json({message: `Please wait for ${VISA_DOCUMENT_ORDER[idx-1]} to be approved first`});
             }
         }
         const fileUrl = `https://${process.env.AWS_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${fileKey}`;
-        // create a new doc to track the file info in MongoDB, to tell HR,  initial status is pending 
-        const doc = await Document.create({
-            employeeId: employee._id,
-            type: docType,
-            fileUrl,
-            fileKey,
-            status: 'pending'
+
+        let visaDocument = visaStatus.documents.find((document) => document.documentType === docType);
+        if (!visaDocument) {
+            visaStatus.documents.push({ documentType: docType });
+            visaDocument = visaStatus.documents[visaStatus.documents.length - 1];
+        }
+
+        visaDocument.fileUrl = fileUrl;
+        visaDocument.fileName = fileKey.split('/').pop();
+        visaDocument.status = 'pending';
+        visaDocument.feedback = '';
+        visaDocument.uploadedAt = new Date();
+        visaDocument.reviewedAt = undefined;
+        visaDocument.approvedAt = undefined;
+        await visaStatus.save();
+
+        res.json({
+            message: `Document uploaded, waiting for HR approval`,
+            document: visaDocument,
+            visaStatus,
         });
-        res.json({message: `Document uploaded, waiting for HR approval`, document: doc});
     } catch (error) { 
-        console.log('confirmUpload error:', error.message);
         res.status(500).json({ message: error.message });
     }
 }
 
 const getVisaStatus = async (req, res) => {
     try {
-        const employee = await Employee.findOne({ userId: req.user.id });
+        const employee = await Employee.findOne({ userId: getUserId(req) });
+        if (!employee) {
+            return res.status(404).json({ message: 'Profile not Found' });
+        }
+
         if (employee.visaType !== 'F1(CPT/OPT)') {
             return res.json({ isOPT: false }); //if not F1, forntend will not render.
         }
-        const docs = await Document.find({
-            employeeId: employee._id,
-            type: { $in: ['OPT_RECEIPT', 'OPT_EAD', 'I983', 'I20'] }
-        });
-        // Transform the docs array into a map so you can use key:value to get doc info. 
+
+        const visaStatus = await VisaStatus.findOne({ employee: getUserId(req) });
+        const docs = visaStatus?.documents || [];
         const docMap = {};
-        docs.forEach(d=> { docMap[d.type] = d; });
+        docs.forEach((document) => {
+            docMap[normalizeDocumentType(document.documentType)] = document;
+        });
 
         res.json({
             isOPT: true,
             OPT_RECEIPT: docMap['OPT_RECEIPT'] || null,
             OPT_EAD: docMap['OPT_EAD'] || null,
-            I983: docMap['I983'] || null,
-            I20: docMap['I20'] || null
+            I_983: docMap['I_983'] || null,
+            I_20: docMap['I_20'] || null
         });
     } catch(error) {
         res.status(500).json({ message: error.message });
@@ -224,6 +248,5 @@ module.exports = {
     updateEmployment,
     getUploadUrl,
     confirmUpload,
-    getVisaStatus,
-    updateOnboardingStatus  
+    getVisaStatus
 };

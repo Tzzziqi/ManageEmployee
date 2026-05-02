@@ -4,8 +4,8 @@ import { LockOutlined, UserOutlined } from '@ant-design/icons';
 import AuthLayout from './AuthLayout';
 import type { SignInProps } from "../services/authService.ts";
 import { signIn } from "../store/slices/authSlice.ts";
-import { useDispatch } from "react-redux";
-import type { AppDispatch } from "../store/store.ts";
+import { useDispatch, useSelector } from "react-redux";
+import type { AppDispatch, RootState } from "../store/store.ts";
 import { useNavigate } from "react-router-dom";
 
 const { Title, Text } = Typography;
@@ -14,13 +14,13 @@ const SignIn: React.FC = () => {
     const [form] = Form.useForm();
     const dispatch = useDispatch<AppDispatch>();
     const navigate = useNavigate();
+    const authStatus = useSelector((state: RootState) => state.auth.status);
 
     const onFinish = async (values: SignInProps) => {
         try {
-            await dispatch(signIn(values)).unwrap();
+            const authData = await dispatch(signIn(values)).unwrap();
             message.success('Sign In successful! Redirecting...');
-            await new Promise(resolve => setTimeout(resolve, 3000));
-            navigate('/application');
+            navigate(authData.role === 'hr' ? '/hr/onboarding' : '/application');
         } catch (error) {
             message.error((error as string) || 'Sign In. Please reach out with the HR.');
         }
@@ -76,7 +76,7 @@ const SignIn: React.FC = () => {
 
                     <Form.Item style={ { marginTop: '32px' } }>
                         <Button type="primary" htmlType="submit" size="large" block style={ { borderRadius: '6px' } }
-                                loading={ status === 'loading' }>
+                                loading={ authStatus === 'loading' }>
                             Sign In
                         </Button>
                     </Form.Item>
