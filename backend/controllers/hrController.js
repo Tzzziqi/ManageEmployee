@@ -10,12 +10,12 @@ const OPT_WORK_AUTHORIZATIONS = ["OPT", "F1", "F1(CPT/OPT)"];
 const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 const normalizeWorkAuthorization = (value) =>
-  String(value || "").trim().toUpperCase();
+    String(value || "").trim().toUpperCase();
 
 const isOptWorkAuthorization = (value) => {
   const normalized = normalizeWorkAuthorization(value);
   return OPT_WORK_AUTHORIZATIONS.some(
-    (option) => normalized === option || normalized.includes(option)
+      (option) => normalized === option || normalized.includes(option)
   );
 };
 
@@ -35,44 +35,44 @@ const getOnboardingDocumentList = (documents = {}) => {
 };
 
 const getOptReceiptDocument = (documents = {}) =>
-  getOnboardingDocumentList(documents).find((document) => {
-    const name = String(document?.name || document?.documentType || "")
-      .trim()
-      .toUpperCase()
-      .replace(/[\s-]+/g, "_");
+    getOnboardingDocumentList(documents).find((document) => {
+      const name = String(document?.name || document?.documentType || "")
+          .trim()
+          .toUpperCase()
+          .replace(/[\s-]+/g, "_");
 
-    return name === "OPT_RECEIPT" || name.includes("OPT_RECEIPT");
-  });
+      return name === "OPT_RECEIPT" || name.includes("OPT_RECEIPT");
+    });
 
 const buildVisaWorkflowDocuments = (optReceiptDocument) =>
-  VISA_DOCUMENT_ORDER.map((documentType) => {
-    const baseDocument = {
-      documentType,
-      status: "not_uploaded",
-      fileUrl: "",
-      feedback: "",
-    };
+    VISA_DOCUMENT_ORDER.map((documentType) => {
+      const baseDocument = {
+        documentType,
+        status: "not_uploaded",
+        fileUrl: "",
+        feedback: "",
+      };
 
-    const fileUrl = optReceiptDocument?.fileUrl || optReceiptDocument?.url;
+      const fileUrl = optReceiptDocument?.fileUrl || optReceiptDocument?.url;
 
-    if (documentType !== "OPT_RECEIPT" || !fileUrl) {
-      return baseDocument;
-    }
+      if (documentType !== "OPT_RECEIPT" || !fileUrl) {
+        return baseDocument;
+      }
 
-    return {
-      ...baseDocument,
-      status: "pending",
-      fileUrl,
-      s3Key: optReceiptDocument.s3Key,
-      fileName: optReceiptDocument.name || "OPT Receipt",
-    };
-  });
+      return {
+        ...baseDocument,
+        status: "pending",
+        fileUrl,
+        s3Key: optReceiptDocument.s3Key,
+        fileName: optReceiptDocument.name || "OPT Receipt",
+      };
+    });
 
 const getMobilePhone = (phone) =>
-  typeof phone === "string" ? phone : phone?.mobile || "";
+    typeof phone === "string" ? phone : phone?.mobile || "";
 
 const getWorkPhone = (phone) =>
-  typeof phone === "string" ? "" : phone?.work || "";
+    typeof phone === "string" ? "" : phone?.work || "";
 
 const getProfilePictureUrl = (documents = {}) => {
   if (Array.isArray(documents)) {
@@ -127,10 +127,10 @@ const getAllApplications = async (req, res) => {
     const total = await Onboarding.countDocuments();
 
     const applications = await Onboarding.find()
-      .populate("user", "username email role")
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit);
+        .populate("user", "username email role")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit);
 
     res.status(200).json({
       applications,
@@ -162,10 +162,10 @@ const getApplicationsByStatus = async (req, res) => {
     const total = await Onboarding.countDocuments({ status });
 
     const applications = await Onboarding.find({ status })
-      .populate("user", "username email role")
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit);
+        .populate("user", "username email role")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit);
 
     res.status(200).json({
       applications,
@@ -189,14 +189,14 @@ const getEmployeeProfiles = async (req, res) => {
     const searchKeyword = escapeRegex(keyword);
 
     const filter = keyword
-      ? {
+        ? {
           $or: [
             { firstName: { $regex: searchKeyword, $options: "i" } },
             { lastName: { $regex: searchKeyword, $options: "i" } },
             { preferredName: { $regex: searchKeyword, $options: "i" } },
           ],
         }
-      : {};
+        : {};
 
     const [total, totalEmployees] = await Promise.all([
       Employee.countDocuments(filter),
@@ -204,10 +204,10 @@ const getEmployeeProfiles = async (req, res) => {
     ]);
 
     const employees = await Employee.find(filter)
-      .populate("userId", "username email role")
-      .sort({ lastName: 1, firstName: 1 })
-      .skip(skip)
-      .limit(limit);
+        .populate("userId", "username email role")
+        .sort({ lastName: 1, firstName: 1 })
+        .skip(skip)
+        .limit(limit);
 
     res.status(200).json({
       employees,
@@ -229,8 +229,8 @@ const getEmployeeProfileById = async (req, res) => {
     const { id } = req.params;
 
     const employee = await Employee.findById(id).populate(
-      "userId",
-      "username email role"
+        "userId",
+        "username email role"
     );
 
     if (!employee) {
@@ -277,9 +277,9 @@ const approveApplication = async (req, res) => {
       await application.save({ session });
 
       await Employee.findOneAndUpdate(
-        { userId: application.user },
-        { $set: toEmployeeUpdate(application) },
-        { new: true, upsert: true, session, setDefaultsOnInsert: true }
+          { userId: application.user },
+          { $set: toEmployeeUpdate(application) },
+          { new: true, upsert: true, session, setDefaultsOnInsert: true }
       );
 
       if (isOptWorkAuthorization(application.workAuthorization)) {
@@ -287,18 +287,18 @@ const approveApplication = async (req, res) => {
 
         // Visa workflow is initialized once here; later actions only use VisaStatus.documents.
         await VisaStatus.findOneAndUpdate(
-          { employee: application.user },
-          {
-            $set: {
-              employee: application.user,
-              onboarding: application._id,
-              workAuthorization: application.workAuthorization,
-              visaStartDate: application.visaStartDate,
-              visaEndDate: application.visaEndDate,
-              documents: buildVisaWorkflowDocuments(optReceiptDocument),
+            { employee: application.user },
+            {
+              $set: {
+                employee: application.user,
+                onboarding: application._id,
+                workAuthorization: application.workAuthorization,
+                visaStartDate: application.visaStartDate,
+                visaEndDate: application.visaEndDate,
+                documents: buildVisaWorkflowDocuments(optReceiptDocument),
+              },
             },
-          },
-          { new: true, upsert: true, runValidators: true, session }
+            { new: true, upsert: true, runValidators: true, session }
         );
       }
     });

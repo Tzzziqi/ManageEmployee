@@ -19,7 +19,7 @@ router.get("/applications", getAllApplications);
 
 router.get("/applications/status/:status", getApplicationsByStatus);
 
-router.get("/employees", getEmployeeProfiles); 
+router.get("/employees", getEmployeeProfiles);
 
 router.get("/employees/:id", getEmployeeProfileById);
 

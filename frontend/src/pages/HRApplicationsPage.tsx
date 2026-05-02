@@ -3,10 +3,10 @@ import {
     approveApplication,
     getAllApplications,
     getApplicationsByStatus,
+    rejectApplication,
     type Onboarding,
     type OnboardingDocumentFile,
     type OnboardingDocuments,
-    rejectApplication,
 } from "../api/hrApi";
 
 import HRSidebar from "../components/HRSidebar";
@@ -60,7 +60,7 @@ const HRApplicationsPage = () => {
 
         const queryString = params.toString();
         const newUrl = queryString
-            ? `${ window.location.pathname }?${ queryString }`
+            ? `${window.location.pathname}?${queryString}`
             : window.location.pathname;
 
         window.history.replaceState(null, "", newUrl);
@@ -248,7 +248,7 @@ const HRApplicationsPage = () => {
 
     return (
         <div className="flex min-h-screen bg-[#f7f6f2]">
-            <HRSidebar/>
+            <HRSidebar />
 
             <main className="flex-1 p-8">
                 <div className="mx-auto max-w-5xl">
@@ -260,8 +260,8 @@ const HRApplicationsPage = () => {
 
                             <select
                                 className="rounded-lg border px-4 py-2"
-                                value={ statusFilter }
-                                onChange={ (e) => handleStatusChange(e.target.value) }
+                                value={statusFilter}
+                                onChange={(e) => handleStatusChange(e.target.value)}
                             >
                                 <option value="all">All</option>
                                 <option value="pending">Pending</option>
@@ -271,7 +271,7 @@ const HRApplicationsPage = () => {
                         </div>
                     </div>
 
-                    { loading ? (
+                    {loading ? (
                         <div className="rounded-xl border bg-white p-6 shadow-sm">
                             Loading applications...
                         </div>
@@ -282,41 +282,41 @@ const HRApplicationsPage = () => {
                     ) : (
                         <>
                             <div className="space-y-5">
-                                { applications.map((application) => (
+                                {applications.map((application) => (
                                     <OnboardingCard
-                                        key={ application._id }
-                                        application={ application }
-                                        onView={ openApplicationModal }
+                                        key={application._id}
+                                        application={application}
+                                        onView={openApplicationModal}
                                     />
-                                )) }
+                                ))}
                             </div>
 
                             <Pagination
-                                page={ page }
-                                totalPages={ totalPages }
-                                onPageChange={ setPage }
+                                page={page}
+                                totalPages={totalPages}
+                                onPageChange={setPage}
                             />
                         </>
-                    ) }
+                    )}
                 </div>
             </main>
 
-            {/* Read-only application modal; pending records expose the HR decision controls. */ }
-            { selectedApplication && (
+            {/* Read-only application modal; pending records expose the HR decision controls. */}
+            {selectedApplication && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-6">
                     <div className="max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-xl bg-white shadow-xl">
                         <div className="sticky top-0 flex items-center justify-between border-b bg-white p-6">
                             <div>
                                 <h2 className="text-2xl font-bold">View Application</h2>
                                 <p className="text-gray-600">
-                                    { selectedApplication.firstName } { selectedApplication.lastName }
+                                    {selectedApplication.firstName} {selectedApplication.lastName}
                                 </p>
                             </div>
 
                             <button
                                 className="rounded-lg border px-4 py-2 hover:bg-gray-100"
-                                onClick={ closeApplicationModal }
-                                disabled={ actionLoading }
+                                onClick={closeApplicationModal}
+                                disabled={actionLoading}
                             >
                                 Close
                             </button>
@@ -328,35 +328,35 @@ const HRApplicationsPage = () => {
                                     Submitted Information
                                 </h3>
                                 <div className="grid grid-cols-1 gap-5 rounded-xl border bg-white p-5 md:grid-cols-2">
-                                    { detailRows.map(([label, value]) => (
-                                        <div key={ label }>
+                                    {detailRows.map(([label, value]) => (
+                                        <div key={label}>
                                             <p className="text-sm font-semibold text-gray-500">
-                                                { label }
+                                                {label}
                                             </p>
                                             <p className="mt-1 text-gray-900">
-                                                { formatValue(value) }
+                                                {formatValue(value)}
                                             </p>
                                         </div>
-                                    )) }
+                                    ))}
                                 </div>
                             </section>
 
                             <section>
                                 <h3 className="mb-3 text-lg font-semibold">Documents</h3>
-                                { getDocumentRows(selectedApplication.documents).length ? (
+                                {getDocumentRows(selectedApplication.documents).length ? (
                                     <div className="space-y-3">
-                                        { getDocumentRows(selectedApplication.documents).map((document, index) => (
+                                        {getDocumentRows(selectedApplication.documents).map((document, index) => (
                                             <div
-                                                key={ `${ document.name || "document" }-${ index }` }
+                                                key={`${document.name || "document"}-${index}`}
                                                 className="flex items-center justify-between rounded-lg border bg-gray-50 p-4"
                                             >
                         <span className="font-medium">
-                          { document.name || `Document ${ index + 1 }` }
+                          {document.name || `Document ${index + 1}`}
                         </span>
-                                                { document.url || document.fileUrl ? (
+                                                {document.url || document.fileUrl ? (
                                                     <a
                                                         className="font-semibold text-blue-700 hover:underline"
-                                                        href={ document.url || document.fileUrl }
+                                                        href={document.url || document.fileUrl}
                                                         target="_blank"
                                                         rel="noreferrer"
                                                     >
@@ -364,18 +364,18 @@ const HRApplicationsPage = () => {
                                                     </a>
                                                 ) : (
                                                     <span className="text-gray-500">No file</span>
-                                                ) }
+                                                )}
                                             </div>
-                                        )) }
+                                        ))}
                                     </div>
                                 ) : (
                                     <div className="rounded-lg border bg-gray-50 p-4 text-gray-600">
                                         No documents uploaded.
                                     </div>
-                                ) }
+                                )}
                             </section>
 
-                            { selectedApplication.status === "pending" && (
+                            {selectedApplication.status === "pending" && (
                                 <section className="border-t pt-6">
                                     <label className="mb-2 block font-semibold" htmlFor="feedback">
                                         Feedback
@@ -383,46 +383,46 @@ const HRApplicationsPage = () => {
                                     <textarea
                                         id="feedback"
                                         className="w-full rounded-lg border p-3"
-                                        rows={ 4 }
-                                        value={ feedback }
-                                        onChange={ (event) => {
+                                        rows={4}
+                                        value={feedback}
+                                        onChange={(event) => {
                                             setFeedback(event.target.value);
                                             setModalError("");
-                                        } }
+                                        }}
                                     />
                                     <p className="mt-2 text-sm text-gray-500">
                                         FeedBack for Reject
                                     </p>
 
-                                    { modalError && (
+                                    {modalError && (
                                         <p className="mt-3 font-semibold text-red-600">
-                                            { modalError }
+                                            {modalError}
                                         </p>
-                                    ) }
+                                    )}
 
                                     <div className="mt-5 flex gap-3">
                                         <button
                                             className="rounded-lg bg-green-600 px-5 py-2 font-semibold text-white hover:bg-green-700 disabled:opacity-60"
-                                            onClick={ handleApprove }
-                                            disabled={ actionLoading }
+                                            onClick={handleApprove}
+                                            disabled={actionLoading}
                                         >
                                             Approve
                                         </button>
 
                                         <button
                                             className="rounded-lg bg-red-600 px-5 py-2 font-semibold text-white hover:bg-red-700 disabled:opacity-60"
-                                            onClick={ handleReject }
-                                            disabled={ actionLoading }
+                                            onClick={handleReject}
+                                            disabled={actionLoading}
                                         >
                                             Reject
                                         </button>
                                     </div>
                                 </section>
-                            ) }
+                            )}
                         </div>
                     </div>
                 </div>
-            ) }
+            )}
         </div>
     );
 };

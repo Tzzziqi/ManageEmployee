@@ -6,7 +6,6 @@ import MyStepForm from "../forms/MyStepForm.tsx";
 import type { AppDispatch } from "../store/store.ts";
 import type { applicationRequest } from "../services/applicationService.ts";
 
-// 1. 導入 logout action 和 Ant Design 組件
 import { logout } from "../store/slices/authSlice.ts";
 import { Button } from "antd";
 import { LogoutOutlined } from "@ant-design/icons";
@@ -35,7 +34,6 @@ const ApplicationPage = () => {
         checkApplicationStatus();
     }, [navigate, dispatch]);
 
-    // 2. 處理登出邏輯
     const handleLogout = () => {
         dispatch(logout());
         navigate('/signin');
@@ -72,17 +70,16 @@ const ApplicationPage = () => {
     if (loading) return <div style={{ textAlign: 'center', marginTop: 100 }}>Loading...</div>;
 
     return (
-        <div style={{
+        <div style={ {
+            alignItems: 'center',
             backgroundColor: '#f4eee8',
-            minHeight: '100vh',
-            padding: '60px 20px',
             display: 'flex',
             flexDirection: 'column',
-            alignItems: 'center',
-            position: 'relative' // 為了讓登出按鈕定位
+            minHeight: '100vh',
+            padding: '60px 20px',
+            position: 'relative'
         }}>
 
-            {/* 3. 登出按鈕放置在右上角 */}
             <div style={{ position: 'absolute', top: 20, right: 30 }}>
                 <Button
                     type="text"
