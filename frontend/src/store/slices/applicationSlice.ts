@@ -1,7 +1,9 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import applicationService from "../../services/applicationService.ts";
+import applicationService, {
+    type applicationRequest,
+    type S3PresignedUrlRequest
+} from "../../services/applicationService.ts";
 import axios from "axios";
-import { signIn, signup } from "./authSlice.ts";
 
 export const getApplication = createAsyncThunk(
     'auth/getApplication',
@@ -18,58 +20,128 @@ export const getApplication = createAsyncThunk(
     }
 )
 
-const initialState = {
-    username: null,
-    email: null,
-    token: localStorage.getItem('token') || null,
-    isAuthenticated: !!localStorage.getItem('token'),
+export const getS3PresignedUrl = createAsyncThunk(
+    'auth/getS3PresignedUrl',
+    async (props: S3PresignedUrlRequest, thunkAPI) => {
+        try {
+            return await applicationService.getS3PresignedUrl(props);
+        } catch (error) {
+            let message;
+            if (axios.isAxiosError(error)) {
+                message = error.response?.data?.message || error.message || 'Unknown error';
+            }
+            return thunkAPI.rejectWithValue(message);
+        }
+    }
+)
+
+export const submitApplication = createAsyncThunk(
+    'auth/submitApplication',
+    async (applicationData: applicationRequest, thunkAPI) => {
+        try {
+            return await applicationService.submitApplication(applicationData);
+        } catch (error) {
+            let message;
+            if (axios.isAxiosError(error)) {
+                message = error.response?.data?.message || error.message || 'Unknown error';
+            }
+            return thunkAPI.rejectWithValue(message);
+        }
+    }
+)
+
+export const updateApplication = createAsyncThunk(
+    'auth/updateApplication',
+    async (applicationData: applicationRequest, thunkAPI) => {
+        try {
+            return await applicationService.updateApplication(applicationData);
+        } catch (error) {
+            let message;
+            if (axios.isAxiosError(error)) {
+                message = error.response?.data?.message || error.message || 'Unknown error';
+            }
+            return thunkAPI.rejectWithValue(message);
+        }
+    }
+)
+
+interface ApplicationState {
+    applicationData: applicationRequest | null;
+    presignedUrl: {
+        uploadUrl: string;
+        fileUrl: string;
+        s3Key: string;
+    } | null;
+    status: 'idle' | 'loading' | 'succeeded' | 'failed';
+    error: string | null;
+}
+
+const initialState: ApplicationState = {
+    applicationData: null,
+    presignedUrl: null,
     status: 'idle',
     error: '',
 }
 
-const authSlice = createSlice({
-    name: 'auth',
+const applicationSlice = createSlice({
+    name: 'application',
     initialState,
     reducers: {
-        logout: (state) => {
-            state.username = null;
-            state.token = null;
-            state.isAuthenticated = false;
-            localStorage.removeItem('token');
-        },
     },
     extraReducers: (builder) => {
         builder
-            .addCase(signup.pending, (state) => {
+            .addCase(getApplication.pending, (state) => {
                 state.status = 'loading';
                 state.error = '';
             })
-            .addCase(signup.fulfilled, (state, action) => {
+            .addCase(getApplication.fulfilled, (state, action) => {
                 state.status = 'succeeded';
-                state.username = action.payload.username;
+                state.applicationData = action.payload.applicationData;
             })
-            .addCase(signup.rejected, (state, action) => {
+            .addCase(getApplication.rejected, (state, action) => {
                 state.status = 'failed';
                 state.error = action.payload as string;
             })
-            .addCase(signIn.pending, (state) => {
+            .addCase(getS3PresignedUrl.pending, (state) => {
                 state.status = 'loading';
                 state.error = '';
+                state.presignedUrl = null;
             })
-            .addCase(signIn.fulfilled, (state, action) => {
+            .addCase(getS3PresignedUrl.fulfilled, (state, action) => {
                 state.status = 'succeeded';
-                state.username = action.payload.username;
-                state.email = action.payload.email;
-                state.token = action.payload.token;
-                state.isAuthenticated = true;
-                localStorage.setItem('token', action.payload.token);
+                state.presignedUrl = action.payload.uploadUrl;
             })
-            .addCase(signIn.rejected, (state, action) => {
+            .addCase(getS3PresignedUrl.rejected, (state, action) => {
+                state.status = 'failed';
+                state.error = action.payload as string;
+            })
+            .addCase(submitApplication.pending, (state) => {
+                state.status = 'loading';
+                state.error = '';
+                state.presignedUrl = null;
+            })
+            .addCase(submitApplication.fulfilled, (state, action) => {
+                state.status = 'succeeded';
+                state.applicationData = action.payload.applicationData;
+            })
+            .addCase(submitApplication.rejected, (state, action) => {
+                state.status = 'failed';
+                state.error = action.payload as string;
+            })
+            .addCase(updateApplication.pending, (state) => {
+                state.status = 'loading';
+                state.error = '';
+                state.presignedUrl = null;
+            })
+            .addCase(updateApplication.fulfilled, (state, action) => {
+                state.status = 'succeeded';
+                state.applicationData = action.payload.applicationData;
+            })
+            .addCase(updateApplication.rejected, (state, action) => {
                 state.status = 'failed';
                 state.error = action.payload as string;
             })
     }
 })
 
-export const { logout } = authSlice.actions;
-export default authSlice.reducer;
+export default applicationSlice.reducer;
