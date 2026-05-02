@@ -4,9 +4,15 @@ const router       = express.Router();
 const authMiddleware = require('../middlewares/authMiddleware');  
 const requireRole  = require('../middlewares/roleMiddleware');
 const {
-  getProfile, updateAddress, updateEmergencyContact,
-  updateName, updateContact, updateEmployment,
-  getUploadUrl, confirmUpload, getVisaStatus, updateOnboardingStatus
+  getProfile,
+  updateName,
+  updateAddress,
+  updateContact,
+  updateEmergencyContact,
+  updateEmployment,
+  getUploadUrl,
+  confirmUpload,
+  getVisaStatus
 } = require('../controllers/employeeController');
 
 const employeeOrHR = [authMiddleware, requireRole('employee', 'hr')];
@@ -23,8 +29,5 @@ router.post('/documents/upload-url',      ...employeeOrHR, getUploadUrl);
 router.post('/documents/confirm',         ...employeeOrHR, confirmUpload);
 
 router.get('/visa-status',                ...employeeOrHR, getVisaStatus);
-
-router.put('/onboarding/status', authMiddleware, requireRole('hr'), updateOnboardingStatus);
-
 
 module.exports = router;
