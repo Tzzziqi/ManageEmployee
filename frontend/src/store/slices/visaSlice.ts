@@ -19,26 +19,19 @@ export const uploadDocument = createAsyncThunk(
     'visa/uploadDocument',
     async ({ file, docType }: { file: File; docType: string }, { rejectWithValue }) => {
         try {
-            const { data } = await api.post('/employee/documents/upload-url', {
-                fileType: file.type, // pdf o word etc.
-                docType // e.g opt eda or i20 etc.
+            const res = await api.post('/employee/documents/upload', file, {
+                params: {
+                    docType,
+                    fileName: file.name
+                },
+                headers: {
+                    'Content-Type': file.type || 'application/octet-stream'
+                }
             });
-            // step 2: PUT file to S3, use Fetch coz teh req is sent to S3 not our backend.
-            await fetch(data.uploadUrl, {
-                method: 'PUT',
-                body: file,
-                headers: {'Content-Type': file.type}
-            });
-            // step3: tell backend the file is uploaded and ready for processing, so backend can update the document status to 'pending review' and store the file URL for future access.
-            await api.post('/employee/documents/confirm', {
-                fileKey: data.fileKey,
-                docType
-            });
-            return docType; //tell which file has been uploaded/
+            return res.data.document;
 
         } catch(error: any) {
-            // used fetch so no err.response only .message. 
-            return rejectWithValue(error.message);
+            return rejectWithValue(error.response?.data?.message || error.message);
         }
     }
 )
