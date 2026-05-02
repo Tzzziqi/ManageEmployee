@@ -98,7 +98,8 @@ const MyStepForm = ({ initialValues, isReadOnly, status }: { initialValues: any,
                             s3Key: '',
                             uploadedAt: new Date()
                         },
-                        workAuthorization: mapDocument(rawData.documents?.workAuthorization?.url),
+                        workAuthorization: mapDocument(rawData.documents?.workAuthorization?.url || rawData.documents?.workAuth?.url),
+                        workAuth: mapDocument(rawData.documents?.workAuth?.url || rawData.documents?.workAuthorization?.url),
                         driverLicense: mapDocument(rawData.documents?.driverLicense?.url),
                     }
                 }

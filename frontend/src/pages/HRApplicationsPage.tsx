@@ -5,6 +5,8 @@ import {
   getApplicationsByStatus,
   rejectApplication,
   type Onboarding,
+  type OnboardingDocumentFile,
+  type OnboardingDocuments,
 } from "../api/hrApi";
 
 import HRSidebar from "../components/HRSidebar";
@@ -114,12 +116,65 @@ const HRApplicationsPage = () => {
 
   const formatValue = (value?: string) => value || "N/A";
 
+  const formatPhone = (
+    phone: Onboarding["phone"],
+    type: "mobile" | "work" = "mobile"
+  ) => {
+    if (!phone) {
+      return "N/A";
+    }
+
+    if (typeof phone === "string") {
+      return phone;
+    }
+
+    return phone[type] || "N/A";
+  };
+
   const formatDate = (value?: string) => {
     if (!value) {
       return "N/A";
     }
 
     return new Date(value).toLocaleDateString();
+  };
+
+  const getDocumentRows = (
+    documents?: Onboarding["documents"]
+  ): OnboardingDocumentFile[] => {
+    if (!documents) {
+      return [];
+    }
+
+    if (Array.isArray(documents)) {
+      return documents;
+    }
+
+    const documentMap = documents as OnboardingDocuments;
+    const rows: OnboardingDocumentFile[] = [];
+
+    if (documentMap.profilePicture) {
+      rows.push({
+        name: "Profile Picture",
+        ...documentMap.profilePicture,
+      });
+    }
+
+    if (documentMap.driverLicense) {
+      rows.push({
+        name: "Driver License",
+        ...documentMap.driverLicense,
+      });
+    }
+
+    if (documentMap.workAuthorization) {
+      rows.push({
+        name: "OPT Receipt",
+        ...documentMap.workAuthorization,
+      });
+    }
+
+    return rows.filter((document) => document.url || document.fileUrl);
   };
 
   const detailRows = selectedApplication
@@ -129,7 +184,8 @@ const HRApplicationsPage = () => {
         ["Last Name", selectedApplication.lastName],
         ["Preferred Name", selectedApplication.preferredName],
         ["Email", selectedApplication.email],
-        ["Phone", selectedApplication.phone],
+        ["Mobile Phone", formatPhone(selectedApplication.phone, "mobile")],
+        ["Work Phone", formatPhone(selectedApplication.phone, "work")],
         ["Street", selectedApplication.address?.street],
         ["City", selectedApplication.address?.city],
         ["State", selectedApplication.address?.state],
@@ -287,9 +343,9 @@ const HRApplicationsPage = () => {
 
               <section>
                 <h3 className="mb-3 text-lg font-semibold">Documents</h3>
-                {selectedApplication.documents?.length ? (
+                {getDocumentRows(selectedApplication.documents).length ? (
                   <div className="space-y-3">
-                    {selectedApplication.documents.map((document, index) => (
+                    {getDocumentRows(selectedApplication.documents).map((document, index) => (
                       <div
                         key={`${document.name || "document"}-${index}`}
                         className="flex items-center justify-between rounded-lg border bg-gray-50 p-4"
@@ -297,10 +353,10 @@ const HRApplicationsPage = () => {
                         <span className="font-medium">
                           {document.name || `Document ${index + 1}`}
                         </span>
-                        {document.url ? (
+                        {document.url || document.fileUrl ? (
                           <a
                             className="font-semibold text-blue-700 hover:underline"
-                            href={document.url}
+                            href={document.url || document.fileUrl}
                             target="_blank"
                             rel="noreferrer"
                           >

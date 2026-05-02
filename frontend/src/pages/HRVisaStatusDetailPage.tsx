@@ -108,7 +108,11 @@ const HRVisaStatusDetailPage = () => {
   };
 
   const canOpenDocument = (document: VisaDocument) => {
-    return document.status === "pending" || document.status === "approved";
+    return (
+      document.status === "pending" ||
+      document.status === "approved" ||
+      document.status === "rejected"
+    );
   };
 
   const closeModal = () => {
@@ -274,9 +278,7 @@ const HRVisaStatusDetailPage = () => {
 
                       {!clickable && (
                         <p className="mt-3 text-xs text-gray-500">
-                          {document.status === "rejected"
-                            ? "Employee must re-upload to continue."
-                            : "No HR action available."}
+                          No HR action available.
                         </p>
                       )}
                     </button>
@@ -333,22 +335,7 @@ const HRVisaStatusDetailPage = () => {
                     >
                       Reject
                     </button>
-
-                    {nextDocumentType && (
-                      <button
-                        onClick={handleSendNotification}
-                        className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-                      >
-                        Send Notification
-                      </button>
-                    )}
                   </div>
-
-                  {nextDocumentType && (
-                    <p className="text-xs text-gray-600">
-                      Notify employee to upload {DOCUMENT_LABELS[nextDocumentType]}.
-                    </p>
-                  )}
 
                   {showFeedbackInput && (
                     <div className="space-y-2">
@@ -368,6 +355,21 @@ const HRVisaStatusDetailPage = () => {
                       </button>
                     </div>
                   )}
+                </div>
+              )}
+
+              {selectedDocument.status === "approved" && nextDocumentType && (
+                <div className="space-y-3 border-t pt-4">
+                  <button
+                    onClick={handleSendNotification}
+                    className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                  >
+                    Send Notification
+                  </button>
+
+                  <p className="text-xs text-gray-600">
+                    Notify employee to upload {DOCUMENT_LABELS[nextDocumentType]}.
+                  </p>
                 </div>
               )}
 

@@ -19,8 +19,23 @@ const isOptWorkAuthorization = (value) => {
   );
 };
 
-const getOptReceiptDocument = (documents = []) =>
-  documents.find((document) => {
+const getOnboardingDocumentList = (documents = {}) => {
+  if (Array.isArray(documents)) {
+    return documents;
+  }
+
+  return [
+    documents.profilePicture && { name: "profilePicture", ...documents.profilePicture },
+    documents.driverLicense && { name: "driverLicense", ...documents.driverLicense },
+    documents.workAuthorization && {
+      name: "OPT_RECEIPT",
+      ...documents.workAuthorization,
+    },
+  ].filter((document) => document?.url || document?.fileUrl);
+};
+
+const getOptReceiptDocument = (documents = {}) =>
+  getOnboardingDocumentList(documents).find((document) => {
     const name = String(document?.name || document?.documentType || "")
       .trim()
       .toUpperCase()
@@ -48,9 +63,16 @@ const buildVisaWorkflowDocuments = (optReceiptDocument) =>
       ...baseDocument,
       status: "pending",
       fileUrl,
+      s3Key: optReceiptDocument.s3Key,
       fileName: optReceiptDocument.name || "OPT Receipt",
     };
   });
+
+const getMobilePhone = (phone) =>
+  typeof phone === "string" ? phone : phone?.mobile || "";
+
+const getWorkPhone = (phone) =>
+  typeof phone === "string" ? "" : phone?.work || "";
 
 const toEmployeeUpdate = (onboarding) => ({
   user: onboarding.user,
@@ -64,8 +86,9 @@ const toEmployeeUpdate = (onboarding) => ({
   ssn: onboarding.personalInfo?.ssn,
   dateOfBirth: onboarding.personalInfo?.dateOfBirth,
   gender: onboarding.personalInfo?.gender,
-  phone: onboarding.phone,
-  cellPhone: onboarding.phone,
+  phone: getMobilePhone(onboarding.phone),
+  cellPhone: getMobilePhone(onboarding.phone),
+  workPhone: getWorkPhone(onboarding.phone),
   address: {
     building: onboarding.address?.building,
     street: onboarding.address?.street,
@@ -214,7 +237,7 @@ const getEmployeeProfileById = async (req, res) => {
     res.status(200).json({
       employee,
       uploadedDocuments,
-      onboardingDocuments: onboarding?.documents || [],
+      onboardingDocuments: getOnboardingDocumentList(onboarding?.documents),
     });
   } catch (error) {
     res.status(500).json({

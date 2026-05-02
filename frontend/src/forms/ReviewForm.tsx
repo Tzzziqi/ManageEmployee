@@ -34,7 +34,10 @@ const ReviewForm = ({ isReadOnly }: { isReadOnly: boolean }) => {
 
     const profilePicUrl = getDocUrl(applicationData.documents?.profilePicture?.url);
     const driverLicenseUrl = getDocUrl(applicationData.documents?.driverLicense?.url);
-    const workAuthUrl = getDocUrl(applicationData.documents?.workAuthorization?.url);
+    const workAuthUrl = getDocUrl(
+        applicationData.documents?.workAuth?.url ||
+        applicationData.documents?.workAuthorization?.url
+    );
 
     return (
         <div style={{ padding: '24px', maxWidth: '800px', margin: '0 auto' }}>

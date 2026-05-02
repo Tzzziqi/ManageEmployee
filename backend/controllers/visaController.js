@@ -257,10 +257,12 @@ const approveVisaDocument = async (req, res) => {
     }
 
     await visa.save();
+    await visa.populate("employee", "username email");
+    await visa.populate("onboarding");
 
     res.status(200).json({
       message: "Document approved",
-      visa,
+      visa: toVisaViewModel(visa),
     });
   } catch (error) {
     res.status(500).json({
@@ -302,10 +304,12 @@ const rejectVisaDocument = async (req, res) => {
     doc.reviewedAt = new Date();
 
     await visa.save();
+    await visa.populate("employee", "username email");
+    await visa.populate("onboarding");
 
     res.status(200).json({
       message: "Document rejected",
-      visa,
+      visa: toVisaViewModel(visa),
     });
   } catch (error) {
     res.status(500).json({

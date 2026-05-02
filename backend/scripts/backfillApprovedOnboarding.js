@@ -15,8 +15,23 @@ const isOptWorkAuthorization = (value) => {
   );
 };
 
-const getOptReceiptDocument = (documents = []) =>
-  documents.find((document) => {
+const getOnboardingDocumentList = (documents = {}) => {
+  if (Array.isArray(documents)) {
+    return documents;
+  }
+
+  return [
+    documents.profilePicture && { name: "profilePicture", ...documents.profilePicture },
+    documents.driverLicense && { name: "driverLicense", ...documents.driverLicense },
+    documents.workAuthorization && {
+      name: "OPT_RECEIPT",
+      ...documents.workAuthorization,
+    },
+  ].filter((document) => document?.url || document?.fileUrl);
+};
+
+const getOptReceiptDocument = (documents = {}) =>
+  getOnboardingDocumentList(documents).find((document) => {
     const name = String(document?.name || document?.documentType || "")
       .trim()
       .toUpperCase()
@@ -38,11 +53,18 @@ const buildVisaWorkflowDocuments = (optReceiptDocument) =>
     if (documentType === "OPT_RECEIPT" && fileUrl) {
       document.status = "pending";
       document.fileUrl = fileUrl;
+      document.s3Key = optReceiptDocument.s3Key;
       document.fileName = optReceiptDocument.name || "OPT Receipt";
     }
 
     return document;
   });
+
+const getMobilePhone = (phone) =>
+  typeof phone === "string" ? phone : phone?.mobile || "";
+
+const getWorkPhone = (phone) =>
+  typeof phone === "string" ? "" : phone?.work || "";
 
 const toEmployeeUpdate = (onboarding) => ({
   user: onboarding.user,
@@ -56,8 +78,9 @@ const toEmployeeUpdate = (onboarding) => ({
   ssn: onboarding.personalInfo?.ssn,
   dateOfBirth: onboarding.personalInfo?.dateOfBirth,
   gender: onboarding.personalInfo?.gender,
-  phone: onboarding.phone,
-  cellPhone: onboarding.phone,
+  phone: getMobilePhone(onboarding.phone),
+  cellPhone: getMobilePhone(onboarding.phone),
+  workPhone: getWorkPhone(onboarding.phone),
   address: {
     building: onboarding.address?.building,
     street: onboarding.address?.street,

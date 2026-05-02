@@ -11,31 +11,101 @@ const s3Client = new S3Client({
     }
 })
 
-const toDocumentList = (documents = {}) => {
-    if (Array.isArray(documents)) {
-        return documents.map((document) => ({
-            name: document.name || document.documentType,
-            url: document.url || document.fileUrl || '',
-            fileUrl: document.fileUrl || document.url || '',
-            s3Key: document.s3Key,
-            uploadedAt: document.uploadedAt
-        }));
+const getDocumentFile = (document) => {
+    if (!document) {
+        return null;
     }
 
-    return Object.entries(documents)
-        .filter(([, document]) => document?.url || document?.fileUrl)
-        .map(([name, document]) => ({
-            name: name === 'workAuthorization' ? 'OPT_RECEIPT' : name,
-            url: document.url || document.fileUrl || '',
-            fileUrl: document.fileUrl || document.url || '',
-            s3Key: document.s3Key,
-            uploadedAt: document.uploadedAt
-        }));
+    const url = document.url || document.fileUrl;
+    if (!url) {
+        return null;
+    }
+
+    return {
+        url,
+        s3Key: document.s3Key,
+        uploadedAt: document.uploadedAt
+    };
+};
+
+const toDocumentObject = (documents = {}) => {
+    if (Array.isArray(documents)) {
+        const documentObject = {};
+
+        documents.forEach((document) => {
+            const file = getDocumentFile(document);
+            if (!file) {
+                return;
+            }
+
+            const name = String(document.name || document.documentType || "").trim();
+            const normalizedName = name.toUpperCase().replace(/[\s-]+/g, "_");
+
+            if (name === "profilePicture") {
+                documentObject.profilePicture = file;
+            } else if (name === "driverLicense") {
+                documentObject.driverLicense = file;
+            } else if (name === "workAuthorization" || normalizedName === "OPT_RECEIPT") {
+                documentObject.workAuthorization = file;
+            }
+        });
+
+        return documentObject;
+    }
+
+    return {
+        profilePicture: getDocumentFile(documents.profilePicture) || undefined,
+        workAuthorization: getDocumentFile(documents.workAuthorization) || undefined,
+        driverLicense: getDocumentFile(documents.driverLicense) || undefined,
+    };
+};
+
+const toWorkAuthorizationDetail = (workAuthorization, fallback = {}) => {
+    if (workAuthorization && typeof workAuthorization === "object") {
+        return {
+            isCitizenOrPR: workAuthorization.isCitizenOrPR ?? "",
+            citizenType: workAuthorization.citizenType || "",
+            workAuthType: workAuthorization.workAuthType || "",
+            otherVisaTitle: workAuthorization.otherVisaTitle || "",
+            startDate: workAuthorization.startDate,
+            endDate: workAuthorization.endDate,
+        };
+    }
+
+    return {
+        isCitizenOrPR: fallback.isCitizenOrPR || "",
+        citizenType: fallback.citizenType || "",
+        workAuthType: workAuthorization || fallback.workAuthType || "",
+        otherVisaTitle: fallback.otherVisaTitle || "",
+        startDate: fallback.startDate,
+        endDate: fallback.endDate,
+    };
+};
+
+const toPhoneObject = (phone) => {
+    if (!phone) {
+        return { mobile: "", work: "" };
+    }
+
+    if (typeof phone === "string") {
+        return { mobile: phone, work: "" };
+    }
+
+    return {
+        mobile: phone.mobile || "",
+        work: phone.work || "",
+    };
 };
 
 const normalizeOnboardingPayload = (body) => {
     const data = body.applicationData || body;
-    const workAuthorization = data.workAuthorization?.workAuthType || data.workAuthorization;
+    const workAuthorizationSource = data.workAuthorizationDetail || data.workAuthorization;
+    const workAuthorizationDetail = toWorkAuthorizationDetail(workAuthorizationSource, {
+        workAuthType: data.workAuthorization,
+        startDate: data.visaStartDate,
+        endDate: data.visaEndDate,
+    });
+    const workAuthorization = workAuthorizationDetail.workAuthType || undefined;
 
     return {
         firstName: data.firstName,
@@ -43,7 +113,7 @@ const normalizeOnboardingPayload = (body) => {
         middleName: data.middleName,
         preferredName: data.preferredName,
         email: data.email,
-        phone: data.phone?.mobile || data.phone,
+        phone: toPhoneObject(data.phone),
         personalInfo: data.personalInfo,
         address: {
             building: data.address?.building || data.address?.buildingNumber,
@@ -53,11 +123,12 @@ const normalizeOnboardingPayload = (body) => {
             zip: data.address?.zip || data.address?.zipCode,
         },
         workAuthorization,
-        visaStartDate: data.visaStartDate || data.workAuthorization?.startDate,
-        visaEndDate: data.visaEndDate || data.workAuthorization?.endDate,
+        workAuthorizationDetail,
+        visaStartDate: workAuthorizationDetail.startDate || data.visaStartDate,
+        visaEndDate: workAuthorizationDetail.endDate || data.visaEndDate,
         reference: data.reference,
         emergencyContacts: data.emergencyContacts,
-        documents: toDocumentList(data.documents),
+        documents: toDocumentObject(data.documents),
     };
 };
 
@@ -67,6 +138,13 @@ const toApplicationResponse = (onboarding) => {
     }
 
     const data = onboarding.toObject ? onboarding.toObject() : onboarding;
+    const workAuthorizationDetail = data.workAuthorizationDetail || toWorkAuthorizationDetail(
+        data.workAuthorization,
+        {
+            startDate: data.visaStartDate,
+            endDate: data.visaEndDate,
+        }
+    );
 
     return {
         ...data,
@@ -77,10 +155,7 @@ const toApplicationResponse = (onboarding) => {
             middleName: data.middleName,
             preferredName: data.preferredName,
             email: data.email,
-            phone: {
-                mobile: data.phone,
-                work: '',
-            },
+            phone: toPhoneObject(data.phone),
             personalInfo: data.personalInfo,
             address: {
                 building: data.address?.building,
@@ -89,14 +164,10 @@ const toApplicationResponse = (onboarding) => {
                 state: data.address?.state,
                 zipCode: data.address?.zip,
             },
-            workAuthorization: {
-                workAuthType: data.workAuthorization,
-                startDate: data.visaStartDate,
-                endDate: data.visaEndDate,
-            },
+            workAuthorization: workAuthorizationDetail,
             reference: data.reference,
             emergencyContacts: data.emergencyContacts,
-            documents: data.documents || [],
+            documents: data.documents || {},
         },
     };
 };

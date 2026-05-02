@@ -28,7 +28,8 @@ const onboardingSchema = new mongoose.Schema(
       required: true,
     },
     phone: {
-      type: String,
+      mobile: String,
+      work: String,
     },
 
     personalInfo: {
@@ -48,6 +49,15 @@ const onboardingSchema = new mongoose.Schema(
     workAuthorization: {
       type: String,
       enum: ["H1-B", "L2", "F1", "OPT", "F1(CPT/OPT)", "H4", "Other"],
+    },
+
+    workAuthorizationDetail: {
+      isCitizenOrPR: String,
+      citizenType: String,
+      workAuthType: String,
+      otherVisaTitle: String,
+      startDate: Date,
+      endDate: Date,
     },
 
     visaStartDate: Date,
@@ -73,15 +83,23 @@ const onboardingSchema = new mongoose.Schema(
       },
     ],
 
-    documents: [
-      {
-        name: String,
+    documents: {
+      profilePicture: {
         url: String,
-        fileUrl: String,
         s3Key: String,
         uploadedAt: Date,
       },
-    ],
+      workAuthorization: {
+        url: String,
+        s3Key: String,
+        uploadedAt: Date,
+      },
+      driverLicense: {
+        url: String,
+        s3Key: String,
+        uploadedAt: Date,
+      },
+    },
 
     status: {
       type: String,

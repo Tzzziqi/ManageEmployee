@@ -1,5 +1,19 @@
 import axiosInstance from "./axiosInstance";
 
+export interface OnboardingDocumentFile {
+  name?: string;
+  url?: string;
+  fileUrl?: string;
+  s3Key?: string;
+  uploadedAt?: string;
+}
+
+export interface OnboardingDocuments {
+  profilePicture?: OnboardingDocumentFile;
+  workAuthorization?: OnboardingDocumentFile;
+  driverLicense?: OnboardingDocumentFile;
+}
+
 export interface Onboarding {
   _id: string;
   firstName: string;
@@ -7,7 +21,10 @@ export interface Onboarding {
   middleName?: string;
   preferredName?: string;
   email: string;
-  phone?: string;
+  phone?: string | {
+    mobile?: string;
+    work?: string;
+  };
   address?: {
     street?: string;
     city?: string;
@@ -17,10 +34,7 @@ export interface Onboarding {
   workAuthorization?: string;
   visaStartDate?: string;
   visaEndDate?: string;
-  documents?: Array<{
-    name?: string;
-    url?: string;
-  }>;
+  documents?: OnboardingDocuments | OnboardingDocumentFile[];
   status: "pending" | "approved" | "rejected";
   feedback?: string;
   createdAt?: string;
@@ -103,10 +117,7 @@ export interface EmployeeSearchResponse {
 export interface EmployeeProfileResponse {
   employee: EmployeeProfile;
   uploadedDocuments: EmployeeUploadedDocument[];
-  onboardingDocuments: Array<{
-    name?: string;
-    url?: string;
-  }>;
+  onboardingDocuments: OnboardingDocumentFile[];
 }
 
 export interface VisaDocument {
