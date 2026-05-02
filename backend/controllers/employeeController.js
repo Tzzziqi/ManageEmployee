@@ -208,16 +208,17 @@ const confirmUpload = async (req, res) => {
 
 const getVisaStatus = async (req, res) => {
     try {
+        const visaStatus = await VisaStatus.findOne({ employee: getUserId(req) });
         const employee = await Employee.findOne({ userId: getUserId(req) });
-        if (!employee) {
+
+        if (!employee && !visaStatus) {
             return res.status(404).json({ message: 'Profile not Found' });
         }
 
-        if (employee.visaType !== 'F1(CPT/OPT)') {
+        if (employee && !['F1(CPT/OPT)', 'F1', 'OPT'].includes(employee.visaType)) {
             return res.json({ isOPT: false }); //if not F1, forntend will not render.
         }
 
-        const visaStatus = await VisaStatus.findOne({ employee: getUserId(req) });
         const docs = visaStatus?.documents || [];
         const docMap = {};
         docs.forEach((document) => {

@@ -8,9 +8,12 @@ import DocumentCard from '../components/employee/DocumentCard';
 import { Toaster } from 'react-hot-toast';
 import { fetchVisaStatus } from '@/store/slices/visaSlice';
 
+const isUploadableStatus = (status?: string | null) =>
+    !status || ['not_uploaded', 'not_started', 'rejected'].includes(status);
+
 const VisaStatusPage = () => {
     const dispatch = useDispatch<AppDispatch>();
-    const {data, loading } = useSelector((s: RootState) => s.visa);
+    const {data, loading, error } = useSelector((s: RootState) => s.visa);
     
     useEffect(() => {
         dispatch(fetchVisaStatus());
@@ -33,6 +36,15 @@ const VisaStatusPage = () => {
     if(loading) return (
         <div className="flex h-screen items-center justify-center">
             <p>Loading...</p>
+        </div>
+    );
+
+    if(error) return (
+        <div className="flex min-h-screen bg-gray-50">
+            <Navbar />
+            <main className="flex-1 p-8">
+                <p className="text-sm text-red-600">{error}</p>
+            </main>
         </div>
     );
 
@@ -61,17 +73,17 @@ const VisaStatusPage = () => {
                     </p>
                  {/* 1: first needed uploaed file: optrecepit── */}
                 <DocumentCard lable="OPT Receipt" doc={visaData?.OPT_RECEIPT} docType="OPT_RECEIPT"
-                canUpload={!visaData?.OPT_RECEIPT || visaData?.OPT_RECEIPT?.status === 'rejected'}/>
+                canUpload={isUploadableStatus(visaData?.OPT_RECEIPT?.status)}/>
                 
                 <DocumentCard lable="OPT EAD" doc={visaData?.OPT_EAD} docType="OPT_EAD"
-                canUpload={visaData?.OPT_RECEIPT?.status === 'approved' && (!visaData?.OPT_EAD || visaData?.OPT_EAD?.status === 'rejected')}/>
+                canUpload={visaData?.OPT_RECEIPT?.status === 'approved' && isUploadableStatus(visaData?.OPT_EAD?.status)}/>
 
                 <DocumentCard lable="I-983" doc={visaData?.I_983} docType="I_983"
-                canUpload={visaData?.OPT_EAD?.status === 'approved' && (!visaData?.I_983 || visaData?.I_983?.status === 'rejected')}
+                canUpload={visaData?.OPT_EAD?.status === 'approved' && isUploadableStatus(visaData?.I_983?.status)}
                 showTemplates={true} />
             
                 <DocumentCard lable="I-20" doc={visaData?.I_20} docType="I_20"
-                canUpload={visaData?.I_983?.status === 'approved' && (!visaData?.I_20 || visaData?.I_20?.status === 'rejected')}/>
+                canUpload={visaData?.I_983?.status === 'approved' && isUploadableStatus(visaData?.I_20?.status)}/>
 
         </main>
     </div>

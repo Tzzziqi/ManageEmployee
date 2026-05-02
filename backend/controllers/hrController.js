@@ -74,6 +74,15 @@ const getMobilePhone = (phone) =>
 const getWorkPhone = (phone) =>
   typeof phone === "string" ? "" : phone?.work || "";
 
+const getProfilePictureUrl = (documents = {}) => {
+  if (Array.isArray(documents)) {
+    const profilePicture = documents.find((document) => document?.name === "profilePicture");
+    return profilePicture?.url || profilePicture?.fileUrl || "";
+  }
+
+  return documents.profilePicture?.url || documents.profilePicture?.fileUrl || "";
+};
+
 const toEmployeeUpdate = (onboarding) => ({
   user: onboarding.user,
   userId: onboarding.user,
@@ -82,6 +91,7 @@ const toEmployeeUpdate = (onboarding) => ({
   lastName: onboarding.lastName,
   middleName: onboarding.middleName,
   preferredName: onboarding.preferredName,
+  profilePicture: getProfilePictureUrl(onboarding.documents),
   email: onboarding.email,
   ssn: onboarding.personalInfo?.ssn,
   dateOfBirth: onboarding.personalInfo?.dateOfBirth,
