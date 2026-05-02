@@ -70,9 +70,26 @@ export interface applicationRequest {
     }
 }
 
+export interface S3PresignedUrlRequest {
+    fileName: string;
+    fileType: string;
+}
+
 const applicationService = {
     getApplication: async () => {
-        const response = await axiosInstance.get('/application');
+        const response = await axiosInstance.get('/auth/application');
+        return response.data.data;
+    },
+    updateApplication: async (applicationData: applicationRequest) => {
+        const response = await axiosInstance.put('/auth/application', applicationData);
+        return response.data.data;
+    },
+    submitApplication: async (applicationData: applicationRequest) => {
+        const response = await axiosInstance.post('/auth/application', applicationData);
+        return response.data.data;
+    },
+    getS3PresignedUrl: async (props: S3PresignedUrlRequest) => {
+        const response = await axiosInstance.get('/auth/upload-url', { params: props });
         return response.data.data;
     }
 }

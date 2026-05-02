@@ -37,7 +37,7 @@ const submitApplication = async (req, res) => {
         const newApplication = new Application({
             userId,
             status: 'pending',
-            applicationData: req.body
+            applicationData: req.body.applicationData
         });
 
         await newApplication.save();
@@ -54,7 +54,7 @@ const updateApplication = async (req, res) => {
             { userId },
             {
                 $set: {
-                    applicationData: req.body,
+                    applicationData: req.body.applicationData,
                     status: 'pending',
                     feedback: ''
                 }

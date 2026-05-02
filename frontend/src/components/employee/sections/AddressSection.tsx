@@ -42,7 +42,12 @@ const handleSave = handleSubmit(async (formData) => {
         toast.error(error || 'Failed to update address');
         throw error; // let sectioncard know failed to save and do not close editing modle
     }
-});
+      },
+        (errors) => {
+          throw new Error('Validation failed'); 
+        }
+      );
+
 
   const handleDiscard = () => reset(address); 
 
