@@ -33,8 +33,9 @@ export const signIn = createAsyncThunk(
 )
 
 const initialState = {
-    username: null,
-    email: null,
+    username: '',
+    id: '',
+    email: '',
     token: localStorage.getItem('token') || null,
     isAuthenticated: !!localStorage.getItem('token'),
     status: 'idle',
@@ -46,7 +47,9 @@ const authSlice = createSlice({
     initialState,
     reducers: {
         logout: (state) => {
-            state.username = null;
+            state.username = '';
+            state.email = '';
+            state.id = '';
             state.token = null;
             state.isAuthenticated = false;
             localStorage.removeItem('token');
@@ -72,9 +75,10 @@ const authSlice = createSlice({
             })
             .addCase(signIn.fulfilled, (state, action) => {
                 state.status = 'succeeded';
-                state.username = action.payload.username;
-                state.email = action.payload.email;
+                state.username = action.payload.user.username;
+                state.email = action.payload.user.email;
                 state.token = action.payload.token;
+                state.id = action.payload.user.id;
                 state.isAuthenticated = true;
                 localStorage.setItem('token', action.payload.token);
             })
