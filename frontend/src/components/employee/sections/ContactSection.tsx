@@ -1,5 +1,6 @@
 // Contact component: display and edit contact info, save to backend
 import { useForm } from 'react-hook-form';
+import { useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { updateContact } from '../../../store/slices/profileSlice';
 import type { RootState, AppDispatch } from '../../../store/store';
@@ -12,10 +13,10 @@ const ContactSection = () => {
   const dispatch = useDispatch<AppDispatch>();
   const data = useSelector((s: RootState) => s.profile.data);
 
-  const defaultValues = {
+  const defaultValues = useMemo(() => ({
     cellPhone: data?.cellPhone ?? '',
     workPhone: data?.workPhone ?? '',
-  };
+  }), [data?.cellPhone, data?.workPhone]);
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm({ defaultValues });
 

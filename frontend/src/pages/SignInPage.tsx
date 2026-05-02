@@ -20,7 +20,7 @@ const SignIn: React.FC = () => {
             await dispatch(signIn(values)).unwrap();
             message.success('Sign In successful! Redirecting...');
             await new Promise(resolve => setTimeout(resolve, 3000));
-            navigate('/application');
+            navigate('/employee/profile');
         } catch (error) {
             message.error((error as string) || 'Sign In. Please reach out with the HR.');
         }

@@ -1,5 +1,6 @@
 // Address component: display and edit addrss form, save to backend
 import { useEffect } from 'react';
+import { useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { useDispatch, useSelector } from 'react-redux';
 import { updateAddress } from '../../../store/slices/profileSlice';
@@ -11,45 +12,41 @@ import toast from 'react-hot-toast';
 
 
 const AddressSection = () => {
-    const dispatch = useDispatch<AppDispatch>(); //generic, dispatch support async 
-    const address = useSelector((s: RootState) => s.profile.data?.address ?? {street: '', city: '', state: '', zip: ''});    
-    // init react-hook-form
-    const { register, handleSubmit, reset, formState: { errors } } = useForm({
-      defaultValues: {
-        street: address?.street ?? '',
-        city:   address?.city   ?? '',
-        state:  address?.state  ?? '',
-        zip:    address?.zip    ?? '',
+  const dispatch = useDispatch<AppDispatch>();
+  const rawAddress = useSelector((s: RootState) => s.profile.data?.address);
+
+  const address = useMemo(() => ({
+    street: rawAddress?.street ?? '',
+    city:   rawAddress?.city   ?? '',
+    state:  rawAddress?.state  ?? '',
+    zip:    rawAddress?.zip    ?? '',
+  }), [rawAddress?.street, rawAddress?.city, rawAddress?.state, rawAddress?.zip]);
+
+  const { register, handleSubmit, reset, formState: { errors } } = useForm({
+    defaultValues: address,
+  });
+
+  useEffect(() => {
+    reset(address);
+  }, [address]);
+
+  const handleStartEdit = () => reset(address);
+  const handleDiscard  = () => reset(address);
+  const handleSave = handleSubmit(async (formData) => {
+      try {
+          // .unwrap() key for createAsyncThunk. withoutit, even rejected, promise witll not reject and catch will not execute 
+          await dispatch(updateAddress(formData)).unwrap(); 
+          toast.success('Address updated!');
+      } catch(error: any) {
+          toast.error(error || 'Failed to update address');
+          throw error; // let sectioncard know failed to save and do not close editing modle
       }
-    });
+        },
+          (errors) => {
+            throw new Error('Validation failed'); 
+          }
+        );
 
-    useEffect(() => {
-      reset({
-        street: address?.street ?? '',
-        city:   address?.city   ?? '',
-        state:  address?.state  ?? '',
-        zip:    address?.zip    ?? '',
-      });
-    }, [address]);
-
-const handleStartEdit = () => reset(address);
-const handleSave = handleSubmit(async (formData) => {
-    try {
-        // .unwrap() key for createAsyncThunk. withoutit, even rejected, promise witll not reject and catch will not execute 
-        await dispatch(updateAddress(formData)).unwrap(); 
-        toast.success('Address updated!');
-    } catch(error: any) {
-        toast.error(error || 'Failed to update address');
-        throw error; // let sectioncard know failed to save and do not close editing modle
-    }
-      },
-        (errors) => {
-          throw new Error('Validation failed'); 
-        }
-      );
-
-
-  const handleDiscard = () => reset(address); 
 
   //==== Render
   return(
@@ -82,10 +79,10 @@ const handleSave = handleSubmit(async (formData) => {
 
           ) : (
             <div className="grid grid-cols-2 gap-4">
-            {['street', 'city', 'state', 'zip'].map(f => (
+            {(['street', 'city', 'state', 'zip'] as const).map(f => (
               <div key={f}>
                 <p className="text-xs text-gray-400 uppercase tracking-wide">{f}</p>
-                <p className="text-sm text-gray-800 mt-0.5">{address?.[f] || '—'}</p>
+                <p className="text-sm text-gray-800 mt-0.5">{address[f] || '—'}</p>
               </div>
             ))}
           </div>
