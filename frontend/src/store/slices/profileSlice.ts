@@ -118,16 +118,13 @@ const profileSlice = createSlice({
           state.error = action.payload as string;
         })
 
-        // ── updateAddress ──
-        // 后端返回：{ message, address: employee.address }
         .addCase(updateAddress.fulfilled, (state, action) => {
           if (state.data) {
             state.data.address = action.payload.address;
           }
         })
 
-        // ── updateName ──
-        // 后端返回：{ message, data: { firstName, lastName, middleName, preferredName } }
+
         .addCase(updateName.fulfilled, (state, action) => {
           if (state.data) {
             const { firstName, lastName, middleName, preferredName, ssn, dateOfBirth, gender } = action.payload.data;
@@ -141,8 +138,7 @@ const profileSlice = createSlice({
           }
         })
 
-        // ── updateContact ──
-        // 后端返回：{ message, data: { cellPhone, workPhone } }
+
         .addCase(updateContact.fulfilled, (state, action) => {
           if (state.data) {
             const { cellPhone, workPhone } = action.payload.data;
@@ -151,8 +147,7 @@ const profileSlice = createSlice({
           }
         })
 
-        // ── updateEmployment ──
-        // 后端返回：{ message, data: { visaTitle, visaStart, visaEnd } }
+
         .addCase(updateEmployment.fulfilled, (state, action) => {
           if (state.data) {
             const { visaTitle, visaStart, visaEnd } = action.payload.data;
@@ -162,8 +157,7 @@ const profileSlice = createSlice({
           }
         })
 
-        // ── updateEmergencyContact ──
-        // 后端返回：{ message, emergencyContacts: employee.emergencyContacts }
+
         .addCase(updateEmergencyContact.fulfilled, (state, action) => {
           if (state.data) {
             state.data.emergencyContacts = action.payload.emergencyContacts;

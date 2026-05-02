@@ -7,6 +7,11 @@ import MyApplicationPage from "./pages/MyApplicationPage.tsx";
 import PersonalInfoPage from "./pages/PersonalInfoPage.tsx";
 import VisaStatusPage   from './pages/VisaStatusPage';
 
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const token = localStorage.getItem('token');
+  if (!token) return <Navigate to="/signin" replace />;
+  return <>{children}</>;
+};
 
 function App() {
     return (
@@ -16,8 +21,14 @@ function App() {
                 <Route path="/register/:inviteToken" element={ <RegistrationPage/> }/>
                 <Route path="/signin" element={ <SignInPage/> }/>
                 <Route path="/application" element={ <MyApplicationPage/> }/>
-                <Route path="/employee/profile" element={<PersonalInfoPage/>}/>
-                <Route path="/employee/visa-status" element={<VisaStatusPage />} />
+
+
+                <Route path="/employee/profile" element={
+                <ProtectedRoute><PersonalInfoPage/></ProtectedRoute>
+                }/>
+                <Route path="/employee/visa-status" element={
+                <ProtectedRoute><VisaStatusPage/></ProtectedRoute>
+                }/>
                 <Route path='*' element={ <Navigate to="/signin" /> }/>
             </Routes>
         </div>
