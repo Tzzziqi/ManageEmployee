@@ -12,12 +12,39 @@ const s3 = new S3Client({
   }
 });
 
+const updateOnboardingStatus = async (req, res) => {
+  try {
+    const { employeeId, status, feedback } = req.body;
+    if (!['approved', 'rejected'].includes(status)) {
+      return res.status(400).json({ message: 'Invalid status' });
+    }
+
+    const employee = await Employee.findByIdAndUpdate(
+      employeeId,
+      {
+        onboardingStatus: status,
+        onboardingFeedback: feedback || ''
+      },
+      { new: true }
+    );
+
+    if (!employee) return res.status(404).json({ message: 'Employee not found' });
+
+    res.json({ message: `Onboarding ${status}`, employee });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
 // Get Employeee profile by userId and get from JWT Token for safty issue.
 const getProfile = async(req, res) => {
     try {
-        const employee = await Employee.findOne({ userId: req.user._id });
+        const employee = await Employee.findOne({ userId: req.user.id });
         if( !employee) return res.status(404).json({ message: 'Profile not Found'});
-        res.json(employee); // 200 ok and return employee data
+
+        const documents = await Document.find({ employeeId: employee._id });
+        res.json({ ...employee.toObject(), documents });
+
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -25,16 +52,16 @@ const getProfile = async(req, res) => {
 
 const updateName = async (req, res) => {
     try {
-        const { firstName, lastName, middleName, preferredName } = req.body;
+        const { firstName, lastName, middleName, preferredName, ssn, dateOfBirth, gender } = req.body;
         if (!firstName || !lastName) {
             return res.status(400).json({ message: 'First name and last name are required' });
         }
         const employee = await Employee.findOneAndUpdate(
-            { userId: req.user._id },
-            { firstName, lastName, middleName, preferredName },
+            { userId: req.user.id },
+            { firstName, lastName, middleName, preferredName, ssn, dateOfBirth, gender },
             { new: true }
         );
-        res.json({ message: 'Name updated', data: { firstName, lastName, middleName, preferredName } });
+        res.json({ message: 'Name updated', data: { firstName, lastName, middleName, preferredName, ssn, dateOfBirth, gender } });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -47,7 +74,7 @@ const updateContact = async (req, res) => {
             return res.status(400).json({ message: 'Cell phone is required' });
         }
         const employee = await Employee.findOneAndUpdate(
-            { userId: req.user._id },
+            { userId: req.user.id },
             { cellPhone, workPhone },
             { new: true }
         );
@@ -61,7 +88,7 @@ const updateEmployment = async (req, res) => {
     try {
         const { visaTitle, visaStart, visaEnd } = req.body;
         const employee = await Employee.findOneAndUpdate(
-            { userId: req.user._id },
+            { userId: req.user.id },
             { visaTitle, visaStart, visaEnd },
             { new: true }
         );
@@ -80,7 +107,7 @@ const updateAddress = async (req, res) => {
             return res.status(400).json({message: 'Street, city, state, zip are required'});
         }
         const employee = await Employee.findOneAndUpdate(
-            {userId: req.user._id },
+            {userId: req.user.id },
             {address: { building, street, city, state, zip }},
             {new: true, runValidators: true } // runValidators is from Mongoose, it will run the validation rules defined in the schema when updating.
         );
@@ -98,7 +125,7 @@ const updateEmergencyContact = async (req, res) => {
             return res.status(400).json({message: 'At least 1 emergncy contact required'});
         }
         const employee = await Employee.findOneAndUpdate(
-            {userId: req.user._id},
+            {userId: req.user.id},
             {emergencyContacts: emergencyContacts},
             {new:true}
         );
@@ -113,7 +140,7 @@ const updateEmergencyContact = async (req, res) => {
 const getUploadUrl = async (req, res) => {
     try {
         const { fileType, docType } = req.body;
-        const fileKey = `employee/${req.user._id}/${docType}/${uuidv4()}`; // unique file key for S3
+        const fileKey = `employee/${req.user.id}/${docType}/${uuidv4()}`; // unique file key for S3
         // PutObjectCommand = instruction for "I want to PUT a file to S3"
         // Not uploaded yet — just describes a future operation
         const command = new PutObjectCommand ({
@@ -132,7 +159,7 @@ const getUploadUrl = async (req, res) => {
 const confirmUpload = async (req, res) => {
     try {
         const {fileKey, docType} = req.body;
-        const employee = await Employee.findOne({ userId: req.user._id }); 
+        const employee = await Employee.findOne({ userId: req.user.id }); 
         const optOrder = ['OPT_RECEIPT', 'OPT_EAD', 'I983', 'I20'];
         const idx = optOrder.indexOf(docType);
         // opt recipt do not need to be approved, idx=== -1 means docType not in optOrder,do not need check. 
@@ -157,13 +184,14 @@ const confirmUpload = async (req, res) => {
         });
         res.json({message: `Document uploaded, waiting for HR approval`, document: doc});
     } catch (error) { 
+        console.log('confirmUpload error:', error.message);
         res.status(500).json({ message: error.message });
     }
 }
 
 const getVisaStatus = async (req, res) => {
     try {
-        const employee = await Employee.findOne({ userId: req.user._id });
+        const employee = await Employee.findOne({ userId: req.user.id });
         if (employee.visaType !== 'F1(CPT/OPT)') {
             return res.json({ isOPT: false }); //if not F1, forntend will not render.
         }
@@ -196,5 +224,6 @@ module.exports = {
     updateEmployment,
     getUploadUrl,
     confirmUpload,
-    getVisaStatus
+    getVisaStatus,
+    updateOnboardingStatus  
 };

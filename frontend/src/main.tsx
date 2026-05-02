@@ -7,6 +7,7 @@ import { persistor, store } from './store/store.ts'
 import { Spin } from 'antd';
 import './index.css'
 import App from './App.tsx'
+import './index.css'  
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

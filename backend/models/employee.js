@@ -10,7 +10,7 @@ const EmergencyContactSchema = new mongoose.Schema({
     relationship: { type: String, required: true },
 });
 
-const ReferneceSchema = new mongoose.Schema({
+const Referencechema = new mongoose.Schema({
     firstName:    { type: String, required: true },
     lastName:     { type: String, required: true },
     middleName:   String,
@@ -77,7 +77,7 @@ const EmployeeSchema = new mongoose.Schema({
         enum: ['not_submitted', 'pending', 'approved', 'rejected'],
         default: 'not_submitted'
     },
-    onboardingGeedback: String // Not sure if we want this. 
+    onboardingfeedback: String // Not sure if we want this. 
 }, { timestamps: true }); // auto create CreatedAt and UpdatedAt
 
 module.exports = mongoose.model('Employee', EmployeeSchema);

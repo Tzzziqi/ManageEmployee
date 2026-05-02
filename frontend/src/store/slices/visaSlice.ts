@@ -6,7 +6,7 @@ export const fetchVisaStatus = createAsyncThunk(
     'visa/fetchStatus',
     async (_, { rejectWithValue }) => {
         try {
-            const res = await api.get('/api/employee/visa-status');
+            const res = await api.get('/employee/visa-status');
             return res.data;
         } catch (error: any) {
             return rejectWithValue(error.response?.data?.message);
@@ -19,18 +19,18 @@ export const uploadDocument = createAsyncThunk(
     'visa/uploadDocument',
     async ({ file, docType }: { file: File; docType: string }, { rejectWithValue }) => {
         try {
-            const { data } = await api.post('/api/employee/documents/upload-url', {
+            const { data } = await api.post('/employee/documents/upload-url', {
                 fileType: file.type, // pdf o word etc.
                 docType // e.g opt eda or i20 etc.
             });
             // step 2: PUT file to S3, use Fetch coz teh req is sent to S3 not our backend.
-            await fetch(data.uplodUrl, {
+            await fetch(data.uploadUrl, {
                 method: 'PUT',
                 body: file,
                 headers: {'Content-Type': file.type}
             });
             // step3: tell backend the file is uploaded and ready for processing, so backend can update the document status to 'pending review' and store the file URL for future access.
-            await api.post('/api/employee/documents/confirm', {
+            await api.post('/employee/documents/confirm', {
                 fileKey: data.fileKey,
                 docType
             });
@@ -62,6 +62,9 @@ const visaSlice = createSlice({
     .addCase(fetchVisaStatus.fulfilled, (state, action) => {
         state.loading = false;
         state.data = action.payload;
+    })
+    .addCase(fetchVisaStatus.rejected, (state) => {
+    state.loading = false;
     })
     // uploadDocument
     .addCase(uploadDocument.pending, (state) =>{
