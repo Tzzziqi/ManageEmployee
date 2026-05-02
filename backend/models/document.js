@@ -10,7 +10,7 @@ const DocumentSchema = new mongoose.Schema({
     },
     type: {
         type: String,
-        enum: ['Profile_Pic', 'Drivers_License', 'Work_Auth', 'OPT_RECEIPT', 'OPT_EDA','I983', '-20'],
+        enum: ['PROFILE_PIC', 'DRIVERS_LICENSE', 'WORK_AUTH', 'OPT_RECEIPT', 'OPT_EAD','I983', 'I20'],
         required: true
     },
     fileUrl: { type: String, required: true },

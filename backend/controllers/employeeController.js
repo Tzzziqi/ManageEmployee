@@ -41,7 +41,10 @@ const getProfile = async(req, res) => {
     try {
         const employee = await Employee.findOne({ userId: req.user.id });
         if( !employee) return res.status(404).json({ message: 'Profile not Found'});
-        res.json(employee); // 200 ok and return employee data
+
+        const documents = await Document.find({ employeeId: employee._id });
+        res.json({ ...employee.toObject(), documents });
+
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

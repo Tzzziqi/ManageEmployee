@@ -28,7 +28,7 @@ const NameSection = () => {
   const handleStartEdit = () => reset(defaultValues);
 
   const handleSave = handleSubmit(async (formData) => {
-    console.log('✅ handleSubmit dispactched,data is：', formData); 
+    console.log('✅ handleSubmit dispactched,data is:', formData); 
     try {
       await dispatch(updateName(formData)).unwrap();
       toast.success('Name updated!');
@@ -38,7 +38,8 @@ const NameSection = () => {
     }
     },
     (errors) => {
-      console.log('❌ fail to validate：', errors);  
+      console.log('❌ fail to validate:', errors);  
+      throw new Error('Validation failed');
     }
   );
 

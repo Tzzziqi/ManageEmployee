@@ -73,14 +73,14 @@ return (
         {/** Cancel Confirmation Dialog */}
         {/* open is controlled by showAlert,onOpenChange: autolly closes when clicking outside or pressing ESC                          */}
         <AlertDialog open={showAlert} onOpenChange={setShowAlert}>
-        <AlertDialogContent>
+          <AlertDialogContent className="bg-white border border-gray-200 shadow-lg">
           <AlertDialogHeader>
             <AlertDialogTitle>Discard changes?</AlertDialogTitle>
             <AlertDialogDescription>All unsaved changes will be lost.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Keep editing</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmDiscard}>Discard</AlertDialogAction>
+            <AlertDialogAction onClick={handleConfirmDiscard}>Quit</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
