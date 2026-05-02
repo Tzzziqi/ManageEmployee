@@ -12,31 +12,33 @@ import HREmployeeProfileDetailPage from "./pages/HREmployeeProfileDetailPage";
 import HREmployeeProfilesPage from "./pages/HREmployeeProfilesPage";
 import HRVisaStatusDetailPage from "./pages/HRVisaStatusDetailPage";
 import HRVisaStatusPage from "./pages/HRVisaStatusPage";
+import HRInvitePage from "@/pages/HRInvitesPage.tsx";
 
 const App = () => {
-  return (
-    <Routes>
-      {/* employee / auth */}
-      <Route path="/WelcomeToChuwa/:inviteToken" element={<VerifyInvitePage />} />
-      <Route path="/verify/:inviteToken" element={<VerifyInvitePage />} />
-      <Route path="/register/:inviteToken" element={<RegistrationPage />} />
-      <Route path="/signin" element={<SignInPage />} />
-      <Route path="/application" element={<MyApplicationPage />} />
-      <Route path="/employee/profile" element={<PersonalInfoPage />} />
-      <Route path="/employee/visa-status" element={<VisaStatusPage />} />
+    return (
+        <Routes>
+            {/* employee / auth */ }
+            <Route path="/WelcomeToChuwa/:inviteToken" element={ <VerifyInvitePage/> }/>
+            <Route path="/verify/:inviteToken" element={ <VerifyInvitePage/> }/>
+            <Route path="/register/:inviteToken" element={ <RegistrationPage/> }/>
+            <Route path="/signin" element={ <SignInPage/> }/>
+            <Route path="/application" element={ <MyApplicationPage/> }/>
+            <Route path="/employee/profile" element={ <PersonalInfoPage/> }/>
+            <Route path="/employee/visa-status" element={ <VisaStatusPage/> }/>
 
-      {/* HR */}
-      <Route path="/" element={<Navigate to="/signin" replace />} />
-      <Route path="/hr" element={<Navigate to="/hr/onboarding" replace />} />
-      <Route path="/hr/onboarding" element={<HRApplicationsPage />} />
-      <Route path="/hr/employees" element={<HREmployeeProfilesPage />} />
-      <Route path="/hr/employees/:id" element={<HREmployeeProfileDetailPage />} />
-      <Route path="/hr/visa" element={<HRVisaStatusPage />} />
-      <Route path="/hr/visa/:id" element={<HRVisaStatusDetailPage />} />
+            {/* HR */ }
+            <Route path="/" element={ <Navigate to="/signin" replace/> }/>
+            <Route path="/hr" element={ <Navigate to="/hr/onboarding" replace/> }/>
+            <Route path="/hr/onboarding" element={ <HRApplicationsPage/> }/>
+            <Route path="/hr/employees" element={ <HREmployeeProfilesPage/> }/>
+            <Route path="/hr/employees/:id" element={ <HREmployeeProfileDetailPage/> }/>
+            <Route path="/hr/visa" element={ <HRVisaStatusPage/> }/>
+            <Route path="/hr/visa/:id" element={ <HRVisaStatusDetailPage/> }/>
+            <Route path="/hr/invites" element={ <HRInvitePage/> }/>
 
-      <Route path="*" element={<Navigate to="/signin" replace />} />
-    </Routes>
-  );
+            <Route path="*" element={ <Navigate to="/signin" replace/> }/>
+        </Routes>
+    );
 };
 
 export default App;
