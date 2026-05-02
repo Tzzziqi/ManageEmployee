@@ -58,13 +58,15 @@ const visaSlice = createSlice({
     // fetch visa status
     .addCase(fetchVisaStatus.pending, (state) => {
         state.loading = true;
+        state.error = null;
   })
     .addCase(fetchVisaStatus.fulfilled, (state, action) => {
         state.loading = false;
         state.data = action.payload;
     })
-    .addCase(fetchVisaStatus.rejected, (state) => {
+    .addCase(fetchVisaStatus.rejected, (state, action) => {
     state.loading = false;
+    state.error = (action.payload as string) || 'Failed to fetch visa status';
     })
     // uploadDocument
     .addCase(uploadDocument.pending, (state) =>{
@@ -81,4 +83,3 @@ const visaSlice = createSlice({
 });
 
 export default visaSlice.reducer;
-

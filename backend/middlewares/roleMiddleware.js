@@ -1,7 +1,12 @@
 // for role-based access control. 
 const requireRole = (...allowedRoles) => {
     return (req, res, next) =>{
-        if (!req.user || !allowedRoles.includes(req.user.role)){
+        const userRole = String(req.user?.role || '').toLowerCase();
+        const normalizedAllowedRoles = allowedRoles.map((role) =>
+            String(role).toLowerCase()
+        );
+
+        if (!req.user || !normalizedAllowedRoles.includes(userRole)){
             return res.status(403).json({
                 message: "Access denied: insufficient permissions"
             });
