@@ -1,6 +1,7 @@
 // Display file status + upload button + status hint text + HR feedback
 // Called 4 times by VisaStatusPage: OPT Receipt → OPT EAD → I-983 → I-20
 import { useDispatch, useSelector } from 'react-redux';
+// import { useRef } from 'react';
 import { uploadDocument, fetchVisaStatus } from '@/store/slices/visaSlice';
 import type { RootState, AppDispatch } from '../../store/store';
 import toast from 'react-hot-toast';
@@ -31,14 +32,19 @@ const approvedMessages: any = {
     I_20:        'All documents have been approved.',
     };
     
-    
+
+
 const DocumentCard = ({ lable, doc, docType, canUpload, showTemplates }: Props) => {
     const dispatch  = useDispatch<AppDispatch>();
     const uploading = useSelector((s: RootState) => s.visa.uploading);
+    // const fileInputRef = useRef<HTMLInputElement>(null);
     const style = getCardStyle(doc?.status || null);
+    // console.log(`[${docType}] canUpload:`, canUpload, 'doc?.status:', doc?.status); 
+
 
     const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
+        console.log('handleUpload triggered, file:', file);
         if (!file) return;
         try{
             await dispatch(uploadDocument({ file, docType })).unwrap();
@@ -91,15 +97,24 @@ const DocumentCard = ({ lable, doc, docType, canUpload, showTemplates }: Props) 
             )}
 
             {canUpload && (
-                <label className={`mt-2 inline-block cursor-pointer px-4 py-1.5 bg-blue-600 text-white text-xs rounded-lg hover:bg-blue-700 
-                ${uploading ? 'opacity-50 cursor-not-allowed' : ''}`}>
-                {uploading ? 'Uploading...' : `Upload ${lable}`}
-
-                <input
-                    type="file" accept=".pdf,.jpg,.png" className="hidden"
-                    onChange={handleUpload} disabled={uploading} />
-                </label>
+                <>
+                    <label
+                        htmlFor={`file-upload-${docType}`}
+                        className={`mt-2 inline-block cursor-pointer px-4 py-1.5 bg-blue-600 text-white text-xs rounded-lg hover:bg-blue-700 ${uploading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    >
+                        {uploading ? 'Uploading...' : `Upload ${lable}`}
+                    </label>
+                    <input
+                        id={`file-upload-${docType}`}
+                        type="file"
+                        accept=".pdf,.jpg,.png"
+                        className="hidden"
+                        onChange={handleUpload}
+                        disabled={uploading}
+                    />
+                </>
             )}
+           
 
             {/*  Uploaded file preview and download (shown when fileUrl exists) */}
             {doc?.fileUrl && (

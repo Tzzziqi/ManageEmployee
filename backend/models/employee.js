@@ -47,34 +47,37 @@ const EmployeeSchema = new mongoose.Schema({
         enum: ['male', 'female', 'no_answer', 'other', 'prefer not to say'],
     },
     //===== The Address Section for Employee =====
+    // 📌 统一的地址格式
     address: {
-    building: String,
-    street:   String,
-    city:     String,
-    state:    String,
-    zip:      String
-  },
-    //===== The contact Section for Employee =====
-    cellPhone: String,
-    phone: String,
-    workPhone: String,
+      building: String,
+      street:   String,
+      city:     String,
+      state:    String,
+      zip:      String
+    },
+    //===== The contact Section for Employee ===== 
+    // 📌 统一的电话格式（替代 cellPhone, phone, workPhone）
+    phone: {
+      mobile: String,
+      work: String,
+    },
 
-    isUSResident: { type: Boolean },
-
-    residentType: {
-    type: String,
-    enum: ['Green Card', 'Citizen']
-  },
-    visaType: {
+    // 📌 工作授权相关字段（统一格式）
+    workAuthorization: {
         type: String,
         enum: ['H1-B', 'L2', 'F1', 'OPT', 'F1(CPT/OPT)', 'H4', 'Other']
     },
-    workAuthorization: String,
+    
+    workAuthorizationDetail: {
+      isCitizenOrPR: String,
+      citizenType: String,
+      workAuthType: String,
+      otherVisaTitle: String,
+      startDate: Date,
+      endDate: Date,
+    },
 
-    // ── The Visa Section for Employee ────────────────────  
-    visaTitle: String,
-    visaStart: Date,
-    visaEnd:   Date,
+    // 📌 签证日期（统一到这两个字段）
     visaStartDate: Date,
     visaEndDate: Date,
 

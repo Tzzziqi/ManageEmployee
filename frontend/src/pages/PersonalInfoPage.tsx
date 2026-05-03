@@ -28,40 +28,45 @@ const PersonalInfoPage = () => {
     );
 
     return (
-        <div className="flex min-h-screen bg-gray-50">
-        <Navbar />
-        <Toaster position="top-right" />
-        <main className="flex-1 p-8 max-w-3xl"> 
+    <div className="flex min-h-screen bg-gray-50">
+      <Navbar />
+      <Toaster position="top-right" />
+      <main className="flex-1 p-8 max-w-3xl">
 
         {/* ── Profile Header ── */}
         <div className="bg-white rounded-xl border border-gray-200 p-5 mb-6 flex items-center gap-4">
+          {data?.profilePicture ? (
+            <img src={data.profilePicture} className="w-12 h-12 rounded-full object-cover" />
+          ) : (
             <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center font-semibold text-blue-700">
-                {data?.firstName?.[0]}{data?.lastName?.[0]}
+              {data?.firstName?.[0]}{data?.lastName?.[0]}
             </div>
-            
-            <div>
-                <p className="font-semibold text-gray-800">
-                    {data?.firstName} {data?.lastName} </p>
-                <p className="text-sm text-gray-500">
-                    {data?.email} · {data?.visaType || data?.residentType} </p>
-            </div>
-
-            {/*Onborading State Badge */}
-            <span className="ml-auto text-xs bg-green-100 text-green-700 px-3 py-1 rounded-full border border-green-200">
-                Onboarding approved
-            </span>
+          )}
+          <div>
+            <p className="font-semibold text-gray-800">
+              {data?.firstName} {data?.lastName}
+            </p>
+            <p className="text-sm text-gray-500">
+              {data?.email} · {data?.workAuthorization || data?.workAuthorizationDetail?.workAuthType}
+            </p>
+          </div>
+          {/* Onboarding State Badge */}
+          <span className="ml-auto text-xs bg-green-100 text-green-700 px-3 py-1 rounded-full border border-green-200">
+            Onboarding approved
+          </span>
         </div>
 
-        {/*6 section, */}
+        {/* 6 sections */}
         <NameSection />
         <AddressSection />
         <ContactSection />
         <EmploymentSection />
         <EmergencySection />
         <DocumentsSection />
-                
-        </main>
-        </div>
-    );
+
+      </main>
+    </div>
+  );
 };
+
 export default PersonalInfoPage;

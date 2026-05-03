@@ -1,6 +1,7 @@
 const Employee = require('../models/employee');
 const VisaStatus = require('../models/VisaStatus');
 const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
+const Document = require('../models/document');
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 const { v4: uuidv4 } = require('uuid');
 
@@ -73,11 +74,27 @@ const saveVisaDocumentUpload = async ({ userId, docType, fileKey }) => {
 };
 
 // Get Employeee profile by userId and get from JWT Token for safty issue.
-const getProfile = async(req, res) => {
+const getProfile = async (req, res) => {
     try {
-        const employee = await Employee.findOne({ userId: getUserId(req) });
-        if( !employee) return res.status(404).json({ message: 'Profile not Found'});
-        res.json(employee); // 200 ok and return employee data
+        const userId = getUserId(req);
+        const employee = await Employee.findOne({ userId });
+        if (!employee) return res.status(404).json({ message: 'Profile not Found' });
+
+        const visaDocs = await Document.find({ employeeId: employee._id });
+
+        const Onboarding = require('../models/Onboarding');
+        const onboarding = await Onboarding.findOne({ user: userId }).select('documents');
+        const onboardingDocs = [];
+        if (onboarding?.documents) {
+            const d = onboarding.documents;
+            if (d.driverLicense?.url)     onboardingDocs.push({ type: 'Drivers_License', fileUrl: d.driverLicense.url });
+            if (d.workAuthorization?.url) onboardingDocs.push({ type: 'Work_Auth',       fileUrl: d.workAuthorization.url });
+        }
+
+        res.json({
+            ...employee.toObject(),
+            documents: [...onboardingDocs, ...visaDocs],
+        });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -102,30 +119,31 @@ const updateName = async (req, res) => {
 
 const updateContact = async (req, res) => {
     try {
-        const { cellPhone, workPhone } = req.body;
-        if (!cellPhone) {
-            return res.status(400).json({ message: 'Cell phone is required' });
+        const { mobile, work } = req.body;
+        if (!mobile) {
+            return res.status(400).json({ message: 'mobile phone is required' });
         }
         const employee = await Employee.findOneAndUpdate(
             { userId: getUserId(req) },
-            { cellPhone, workPhone },
+            { phone: { mobile, work } },
             { new: true }
         );
-        res.json({ message: 'Contact updated', data: { cellPhone, workPhone } });
+        res.json({ message: 'Contact updated', data: { phone: employee.phone } });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
 
+
 const updateEmployment = async (req, res) => {
     try {
-        const { visaTitle, visaStart, visaEnd } = req.body;
+        const { visaStartDate, visaEndDate, workAuthorizationDetail } = req.body;
         const employee = await Employee.findOneAndUpdate(
             { userId: getUserId(req) },
-            { visaTitle, visaStart, visaEnd },
+            { visaStartDate, visaEndDate, workAuthorizationDetail },
             { new: true }
         );
-        res.json({ message: 'Employment updated', data: { visaTitle, visaStart, visaEnd } });
+        res.json({ message: 'Employment updated', data: { visaStartDate, visaEndDate, workAuthorizationDetail } });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -268,7 +286,7 @@ const getVisaStatus = async (req, res) => {
             return res.status(404).json({ message: 'Profile not Found' });
         }
 
-        if (employee && !['F1(CPT/OPT)', 'F1', 'OPT'].includes(employee.visaType)) {
+        if (employee && !['F1(CPT/OPT)', 'F1', 'OPT'].includes(employee.workAuthorization)) {
             return res.json({ isOPT: false }); //if not F1, forntend will not render.
         }
 

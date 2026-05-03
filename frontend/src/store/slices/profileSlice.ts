@@ -138,25 +138,25 @@ const profileSlice = createSlice({
         })
 
         // ── updateContact ──
-        // 后端返回：{ message, data: { cellPhone, workPhone } }
         .addCase(updateContact.fulfilled, (state, action) => {
-          if (state.data) {
-            const { cellPhone, workPhone } = action.payload.data;
-            state.data.cellPhone = cellPhone;
-            state.data.workPhone = workPhone;
-          }
-        })
+        if (state.data) {
+          const { mobile, work } = action.payload.data;
+          if (!state.data.phone) state.data.phone = {};
+          state.data.phone.mobile = mobile;
+          state.data.phone.work   = work;
+        }
+      })
 
         // ── updateEmployment ──
         // 后端返回：{ message, data: { visaTitle, visaStart, visaEnd } }
         .addCase(updateEmployment.fulfilled, (state, action) => {
-          if (state.data) {
-            const { visaTitle, visaStart, visaEnd } = action.payload.data;
-            state.data.visaTitle = visaTitle;
-            state.data.visaStart = visaStart;
-            state.data.visaEnd   = visaEnd;
-          }
-        })
+        if (state.data) {
+          const { visaStartDate, visaEndDate, workAuthorizationDetail } = action.payload.data;
+          state.data.visaStartDate          = visaStartDate;
+          state.data.visaEndDate            = visaEndDate;
+          state.data.workAuthorizationDetail = workAuthorizationDetail;
+        }
+      })
 
         // ── updateEmergencyContact ──
         // 后端返回：{ message, emergencyContacts: employee.emergencyContacts }

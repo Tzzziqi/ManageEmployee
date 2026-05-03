@@ -8,8 +8,8 @@ const DocumentsSection = () => {
   const documents = data?.documents ?? []; // empty array for null/undefdined case
 
   const docList = [
-    { label: "Driver's License", type: 'DRIVERS_LICENSE' },
-    { label: 'Work Authorization', type: 'WORK_AUTH' },
+    { label: "Driver's License",  type: 'Drivers_License' }, 
+    { label: 'Work Authorization', type: 'Work_Auth' },       
     { label: 'OPT Receipt',        type: 'OPT_RECEIPT'  },
     { label: 'OPT EAD',            type: 'OPT_EAD'      },
     { label: 'I-983',              type: 'I_983'         },

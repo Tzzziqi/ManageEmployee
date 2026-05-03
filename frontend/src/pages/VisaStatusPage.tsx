@@ -19,19 +19,19 @@ const VisaStatusPage = () => {
         dispatch(fetchVisaStatus());
     },[]);
 
-    useEffect(() => {
-        const refreshVisaStatus = () => {
-            dispatch(fetchVisaStatus());
-        };
+    // useEffect(() => {
+    //     const refreshVisaStatus = () => {
+    //         dispatch(fetchVisaStatus());
+    //     };
 
-        const intervalId = window.setInterval(refreshVisaStatus, 30000);
-        window.addEventListener('focus', refreshVisaStatus);
+    //     const intervalId = window.setInterval(refreshVisaStatus, 30000);
+    //     window.addEventListener('focus', refreshVisaStatus);
 
-        return () => {
-            window.clearInterval(intervalId);
-            window.removeEventListener('focus', refreshVisaStatus);
-        };
-    }, [dispatch]);
+    //     return () => {
+    //         window.clearInterval(intervalId);
+    //         window.removeEventListener('focus', refreshVisaStatus);
+    //     };
+    // }, [dispatch]);
 
     if(loading) return (
         <div className="flex h-screen items-center justify-center">

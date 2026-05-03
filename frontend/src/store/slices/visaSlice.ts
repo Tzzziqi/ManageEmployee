@@ -19,22 +19,29 @@ export const uploadDocument = createAsyncThunk(
     'visa/uploadDocument',
     async ({ file, docType }: { file: File; docType: string }, { rejectWithValue }) => {
         try {
-            const res = await api.post('/employee/documents/upload', file, {
-                params: {
-                    docType,
-                    fileName: file.name
-                },
-                headers: {
-                    'Content-Type': file.type || 'application/octet-stream'
-                }
+            const urlRes = await api.post('/employee/documents/upload-url', {
+                docType,
+                fileType: file.type || 'application/octet-stream'
             });
-            return res.data.document;
+            const { uploadUrl, fileKey } = urlRes.data;
 
-        } catch(error: any) {
+            await fetch(uploadUrl, {
+                method: 'PUT',
+                body: file,
+                headers: { 'Content-Type': file.type || 'application/octet-stream' }
+            });
+
+            const confirmRes = await api.post('/employee/documents/confirm', {
+                docType,
+                fileKey
+            });
+            return confirmRes.data.document;
+
+        } catch (error: any) {
             return rejectWithValue(error.response?.data?.message || error.message);
         }
     }
-)
+);
 // ====== Slice 
 const visaSlice = createSlice({
     name: 'visa',

@@ -96,9 +96,11 @@ const toEmployeeUpdate = (onboarding) => ({
   ssn: onboarding.personalInfo?.ssn,
   dateOfBirth: onboarding.personalInfo?.dateOfBirth,
   gender: onboarding.personalInfo?.gender,
-  phone: getMobilePhone(onboarding.phone),
-  cellPhone: getMobilePhone(onboarding.phone),
-  workPhone: getWorkPhone(onboarding.phone),
+  phone: {
+    mobile: getMobilePhone(onboarding.phone),
+    work: getWorkPhone(onboarding.phone),
+  },
+
   address: {
     building: onboarding.address?.building,
     street: onboarding.address?.street,
@@ -107,11 +109,10 @@ const toEmployeeUpdate = (onboarding) => ({
     zip: onboarding.address?.zip,
   },
   workAuthorization: onboarding.workAuthorization,
-  visaType: onboarding.workAuthorization,
+  workAuthorizationDetail: onboarding.workAuthorizationDetail,
   visaStartDate: onboarding.visaStartDate,
   visaEndDate: onboarding.visaEndDate,
-  visaStart: onboarding.visaStartDate,
-  visaEnd: onboarding.visaEndDate,
+
   emergencyContacts: onboarding.emergencyContacts,
   onboardingStatus: "approved",
   onboardingfeedback: "",
@@ -258,55 +259,44 @@ const getEmployeeProfileById = async (req, res) => {
 };
 
 const approveApplication = async (req, res) => {
-  const session = await mongoose.startSession();
-
   try {
     const { id } = req.params;
-    let application;
 
-    // Approval is atomic: onboarding, Employee, and VisaStatus succeed or roll back together.
-    await session.withTransaction(async () => {
-      application = await Onboarding.findById(id).session(session);
-
-      if (!application) {
-        return;
-      }
-
-      application.status = "approved";
-      application.feedback = "";
-      await application.save({ session });
-
-      await Employee.findOneAndUpdate(
-          { userId: application.user },
-          { $set: toEmployeeUpdate(application) },
-          { new: true, upsert: true, session, setDefaultsOnInsert: true }
-      );
-
-      if (isOptWorkAuthorization(application.workAuthorization)) {
-        const optReceiptDocument = getOptReceiptDocument(application.documents);
-
-        // Visa workflow is initialized once here; later actions only use VisaStatus.documents.
-        await VisaStatus.findOneAndUpdate(
-            { employee: application.user },
-            {
-              $set: {
-                employee: application.user,
-                onboarding: application._id,
-                workAuthorization: application.workAuthorization,
-                visaStartDate: application.visaStartDate,
-                visaEndDate: application.visaEndDate,
-                documents: buildVisaWorkflowDocuments(optReceiptDocument),
-              },
-            },
-            { new: true, upsert: true, runValidators: true, session }
-        );
-      }
-    });
-
+    const application = await Onboarding.findById(id);
     if (!application) {
-      return res.status(404).json({
-        message: "Application not found",
-      });
+      return res.status(404).json({ message: "Application not found" });
+    }
+
+    // 1. 更新 Onboarding status
+    application.status = "approved";
+    application.feedback = "";
+    await application.save();
+
+    // 2. upsert Employee（用 toEmployeeUpdate 做字段 map，这部分逻辑本来就是对的）
+    await Employee.findOneAndUpdate(
+      { userId: application.user },
+      { $set: toEmployeeUpdate(application) },
+      { new: true, upsert: true, setDefaultsOnInsert: true }
+    );
+
+    // 3. 如果是 OPT，创建 VisaStatus
+    if (isOptWorkAuthorization(application.workAuthorization)) {
+      const optReceiptDocument = getOptReceiptDocument(application.documents);
+
+      await VisaStatus.findOneAndUpdate(
+        { employee: application.user },
+        {
+          $set: {
+            employee: application.user,
+            onboarding: application._id,
+            workAuthorization: application.workAuthorization,
+            visaStartDate: application.visaStartDate,
+            visaEndDate: application.visaEndDate,
+            documents: buildVisaWorkflowDocuments(optReceiptDocument),
+          },
+        },
+        { new: true, upsert: true, runValidators: true }
+      );
     }
 
     res.status(200).json({
@@ -318,8 +308,6 @@ const approveApplication = async (req, res) => {
       message: "Failed to approve application",
       error: error.message,
     });
-  } finally {
-    await session.endSession();
   }
 };
 

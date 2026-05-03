@@ -1,5 +1,6 @@
 // Employment component: display and edit visa/employment info, save to backend
 import { useForm } from 'react-hook-form';
+import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { updateEmployment } from '../../../store/slices/profileSlice';
 import type { RootState, AppDispatch } from '../../../store/store';
@@ -13,15 +14,20 @@ const EmploymentSection = () => {
   const data = useSelector((s: RootState) => s.profile.data);
 
   // visaTitle display first and then residentType，then visaType
-  const resolvedVisaTitle = data?.visaTitle || data?.residentType || data?.visaType || '';
+  const resolvedVisaTitle = data?.workAuthorization || data?.workAuthorizationDetail?.workAuthType || '';
 
   const defaultValues = {
-    visaTitle: resolvedVisaTitle,
-    visaStart: data?.visaStart ? data.visaStart.slice(0, 10) : '',
-    visaEnd:   data?.visaEnd   ? data.visaEnd.slice(0, 10)   : '',
+    visaStartDate: data?.visaStartDate ? data.visaStartDate.slice(0, 10) : '',
+    visaEndDate:   data?.visaEndDate   ? data.visaEndDate.slice(0, 10)   : '',
   };
 
   const { register, handleSubmit, reset } = useForm({ defaultValues });
+  useEffect(() => {
+  reset({
+    visaStartDate: data?.visaStartDate ? data.visaStartDate.slice(0, 10) : '',
+    visaEndDate:   data?.visaEndDate   ? data.visaEndDate.slice(0, 10)   : '',
+  });
+}, [data?.visaStartDate, data?.visaEndDate]);
 
   const handleStartEdit = () => reset(defaultValues);
 
@@ -45,18 +51,15 @@ const EmploymentSection = () => {
           <div className="grid grid-cols-2 gap-4">
             <div className="col-span-2">
               <Label>Visa Title</Label>
-              <Input
-                {...register('visaTitle')}
-                placeholder="e.g. F1 OPT, H1-B, Green Card, Citizen"
-              />
+              <Input value={resolvedVisaTitle} disabled placeholder="e.g. F1 OPT, H1-B" />
             </div>
             <div>
               <Label>Start Date</Label>
-              <Input type="date" {...register('visaStart')} />
+              <Input type="date" {...register('visaStartDate')} />
             </div>
             <div>
               <Label>End Date</Label>
-              <Input type="date" {...register('visaEnd')} />
+              <Input type="date" {...register('visaEndDate')} />
             </div>
           </div>
         ) : (
@@ -67,11 +70,11 @@ const EmploymentSection = () => {
             </div>
             <div>
               <p className="text-xs text-gray-400 uppercase tracking-wide">Start Date</p>
-              <p className="text-sm text-gray-800 mt-0.5">{data?.visaStart?.slice(0, 10) || '—'}</p>
+              <p className="text-sm text-gray-800 mt-0.5">{data?.visaStartDate?.slice(0, 10) || '—'}</p>
             </div>
             <div>
               <p className="text-xs text-gray-400 uppercase tracking-wide">End Date</p>
-              <p className="text-sm text-gray-800 mt-0.5">{data?.visaEnd?.slice(0, 10) || '—'}</p>
+              <p className="text-sm text-gray-800 mt-0.5">{data?.visaEndDate?.slice(0, 10) || '—'}</p>
             </div>
           </div>
         )
