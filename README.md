@@ -4,9 +4,25 @@
 
 This project is a Full Stack Employee Management System designed to support employee onboarding and HR operations.
 
-Employees can submit onboarding applications, manage personal information, and upload work authorization documents. HR users can review onboarding applications, manage employee records, and operate a multi-step visa workflow approval system.
+The system provides separate workflows for employees and HR users.
 
-The project focuses on workflow-based system design rather than simple CRUD operations.
+Employees can:
+
+- Register through HR-generated invitation links
+- Submit onboarding applications
+- Manage personal information
+- Upload work authorization documents
+- Track visa workflow progress
+
+HR users can:
+
+- Review onboarding applications
+- Manage employee records
+- Operate a multi-step visa approval workflow
+- Review uploaded documents
+- Send workflow notification emails
+
+The project focuses on workflow-based system design instead of simple CRUD operations.
 
 ---
 
@@ -56,20 +72,9 @@ It contains three major parts:
 
 ## Onboarding Application Review
 
-HR can:
+The onboarding system acts as the entry point of the employee lifecycle.
 
-- View onboarding applications by status
-- Open full onboarding forms
-- Approve or reject applications
-- Submit rejection feedback
-
-The onboarding system was designed as the entry point of the employee lifecycle.
-
-After onboarding approval, the backend initializes downstream business logic, including employee profile creation and visa workflow initialization when work authorization requires OPT processing.
-
-The system also separates onboarding submissions from permanent employee records to avoid coupling temporary application state with long-term employee data.
-
-The onboarding review process also creates an interaction loop between HR and employees:
+HR can review onboarding applications through approval and rejection workflows, while employees can receive feedback, update their submissions, and re-submit applications.
 
 ```text
 Employee submits onboarding
@@ -83,20 +88,19 @@ Employee receives feedback
 Employee updates and re-submits
 ```
 
+After onboarding approval, the backend initializes downstream business logic, including employee profile creation and visa workflow initialization when OPT processing is required.
+
+The system also separates onboarding submissions from permanent employee records to avoid coupling temporary application state with long-term employee data.
+
 ---
 
 ## Employee Profile Management
 
-HR can:
-
-- View employee records
-- Search employees by name
-- View work authorization information
-- Navigate employee records through pagination
-
-Employee profiles are maintained independently from onboarding applications so that employee records remain stable after onboarding approval.
+Employee profiles are maintained independently from onboarding submissions so that permanent employee records remain stable after onboarding approval.
 
 This separation required synchronization between onboarding approval, employee profile creation, and visa workflow initialization.
+
+The HR system supports employee search, profile management, and work authorization tracking through a dedicated employee records module.
 
 ---
 
@@ -122,13 +126,7 @@ approved
 rejected
 ```
 
-HR can:
-
-- Preview uploaded documents
-- Download uploaded documents
-- Approve documents
-- Reject documents with feedback
-- Send next-step notification emails
+The visa workflow system supports document review, approval/rejection handling, feedback loops, and next-step notification delivery between HR and employees.
 
 The system enforces strict sequential workflow progression:
 
