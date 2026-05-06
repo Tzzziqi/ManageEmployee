@@ -163,9 +163,3 @@ Employee uploads the next required document
 ```
 
 The notification system is integrated directly into the workflow engine. After HR approves a document, the system determines the next required step and sends a dynamic email notification to the employee.
-
----
-
-# Architecture
-
-The project follows a layered frontend/backend architecture with centralized workflow management inside the VisaStatus module.
