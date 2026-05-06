@@ -16,13 +16,13 @@ Employees can:
 
 HR users can:
 
+- Generate registration invitation links for new employees
+- Send onboarding invitation emails
 - Review onboarding applications
 - Manage employee records
 - Operate a multi-step visa approval workflow
 - Review uploaded documents
 - Send workflow notification emails
-
-The project focuses on workflow-based system design instead of simple CRUD operations.
 
 ---
 
@@ -59,8 +59,6 @@ The project focuses on workflow-based system design instead of simple CRUD opera
 ---
 
 # HR Module
-
-The HR module is the core workflow management component of the system.
 
 It contains three major parts:
 
