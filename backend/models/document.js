@@ -10,7 +10,7 @@ const DocumentSchema = new mongoose.Schema({
     },
     type: {
         type: String,
-        enum: ['Profile_Pic', 'Drivers_License', 'Work_Auth', 'Opt_Receipt', 'OPT_EDA','I983', '-20'],
+        enum: ['Profile_Pic', 'Drivers_License', 'Work_Auth', 'OPT_RECEIPT', 'OPT_EAD', 'I_983', 'I_20'],
         required: true
     },
     fileUrl: { type: String, required: true },
@@ -18,8 +18,8 @@ const DocumentSchema = new mongoose.Schema({
 
     status: {
         type: String,
-        enum: ['Pending', 'Approved', 'Rejected'],
-        default: 'Pending'
+        enum: ['pending', 'approved', 'rejected'],
+        default: 'pending'
     },
     feedback: String,
 

@@ -8,15 +8,19 @@ const DOCUMENT_LABELS = {
   I_983: "I-983",
   I_20: "I-20",
 };
+const LEGACY_DOCUMENT_TYPES = {
+  I983: "I_983",
+  I20: "I_20",
+  OPT_EDA: "OPT_EAD",
+  "-20": "I_20",
+};
 const REMINDER_DELAY_MS = 3 * 24 * 60 * 60 * 1000;
 
 const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 const normalizeLegacyDocumentStatuses = (documents) => {
   documents.forEach((document) => {
-    if (document.status === "not_uploaded") {
-      document.status = "not_started";
-    }
+    document.documentType = LEGACY_DOCUMENT_TYPES[document.documentType] || document.documentType;
   });
 };
 
@@ -27,7 +31,7 @@ const canSendReminder = (previousStep, currentStep) => {
 
   return (
     previousStep.status === "approved" &&
-    currentStep.status === "not_started" &&
+    ["not_uploaded", "not_started"].includes(currentStep.status) &&
     !currentStep.fileUrl &&
     Date.now() - previousStep.approvedAt.getTime() >= REMINDER_DELAY_MS
   );
@@ -45,7 +49,7 @@ const getNextStep = (documents) => {
   return DOCUMENT_ORDER.map((documentType) =>
     documents.find((document) => document.documentType === documentType) || {
       documentType,
-      status: "not_started",
+      status: "not_uploaded",
     }
   ).find((document) => document.status !== "approved") || null;
 };
@@ -71,7 +75,7 @@ const toVisaViewModel = (visa) => {
 
   const documents = DOCUMENT_ORDER.map((documentType) => {
     const document = visa.documents.find((item) => item.documentType === documentType);
-    return document || { documentType, status: "not_started" };
+    return document || { documentType, status: "not_uploaded", fileUrl: "", feedback: "" };
   });
   const nextStep = getNextStep(documents);
   const nextStepIndex = nextStep ? DOCUMENT_ORDER.indexOf(nextStep.documentType) : -1;
@@ -214,6 +218,8 @@ const approveVisaDocument = async (req, res) => {
       return res.status(404).json({ message: "Visa record not found" });
     }
 
+    normalizeLegacyDocumentStatuses(visa.documents);
+
     const doc = visa.documents.find(
       (d) => d.documentType === documentType
     );
@@ -221,8 +227,6 @@ const approveVisaDocument = async (req, res) => {
     if (!doc) {
       return res.status(400).json({ message: "Document not found" });
     }
-
-    normalizeLegacyDocumentStatuses(visa.documents);
 
     const index = DOCUMENT_ORDER.indexOf(documentType);
 
@@ -249,14 +253,16 @@ const approveVisaDocument = async (req, res) => {
     );
 
     if (nextDoc && !nextDoc.fileUrl && nextDoc.status !== "pending") {
-      nextDoc.status = "not_started";
+      nextDoc.status = "not_uploaded";
     }
 
     await visa.save();
+    await visa.populate("employee", "username email");
+    await visa.populate("onboarding");
 
     res.status(200).json({
       message: "Document approved",
-      visa,
+      visa: toVisaViewModel(visa),
     });
   } catch (error) {
     res.status(500).json({
@@ -298,10 +304,12 @@ const rejectVisaDocument = async (req, res) => {
     doc.reviewedAt = new Date();
 
     await visa.save();
+    await visa.populate("employee", "username email");
+    await visa.populate("onboarding");
 
     res.status(200).json({
       message: "Document rejected",
-      visa,
+      visa: toVisaViewModel(visa),
     });
   } catch (error) {
     res.status(500).json({

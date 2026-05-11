@@ -2,6 +2,9 @@ import { combineReducers, configureStore } from '@reduxjs/toolkit';
 import { FLUSH, PAUSE, PERSIST, persistReducer, persistStore, PURGE, REGISTER, REHYDRATE, } from 'redux-persist';
 import inviteReducer from './slices/inviteSlice'
 import authReducer from './slices/authSlice'
+import profileReducer from './slices/profileSlice';
+import visaReducer    from './slices/visaSlice';
+import applicationReducer from './slices/applicationSlice';
 
 const storage = {
     getItem: (key: string) => Promise.resolve(localStorage.getItem(key)),
@@ -12,18 +15,20 @@ const storage = {
 const rootReducer = combineReducers({
     invite: inviteReducer,
     auth: authReducer,
+    profile: profileReducer,
+    visa: visaReducer,
+    application: applicationReducer
 });
 
 const persistConfig = {
     key: 'root',
     storage,
     whitelist: ['auth'],
-    blacklist: ['invite'],
+    blacklist: ['invite', 'application'],
 }
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
 
-// 4. 設定 Store
 export const store = configureStore({
     reducer: persistedReducer,
     middleware: (getDefaultMiddleware) =>

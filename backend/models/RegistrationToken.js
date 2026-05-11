@@ -16,13 +16,12 @@ const RegistrationTokenSchema = new mongoose.Schema({
     },
     role: {
         type: String,
-        enum: ['Employee', 'HR'],
-        default: 'Employee'
+        enum: ['employee', 'hr'],
+        default: 'employee'
     },
     invitedBy: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        required: true
+        ref: 'User'
     },
     status: {
         type: String,

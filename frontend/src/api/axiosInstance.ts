@@ -2,7 +2,7 @@ import axios from 'axios'
 
 
 const axiosInstance = axios.create({
-    baseURL: '/api',
+    baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api',
     timeout: 10000, // 10 sec
     headers: { 'Content-Type': 'application/json' }
 });
@@ -24,7 +24,7 @@ axiosInstance.interceptors.response.use(
         if (error.response?.status == 401) {
             localStorage.removeItem('token')
             localStorage.removeItem('user')
-            window.location.href = '/signin'
+            // window.location.href = '/signin'
         }
         return Promise.reject(error);
     });

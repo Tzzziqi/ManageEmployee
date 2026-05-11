@@ -1,4 +1,3 @@
-// MyEmployee Form
 const mongoose = require('mongoose');
 
 const EmergencyContactSchema = new mongoose.Schema({
@@ -10,7 +9,7 @@ const EmergencyContactSchema = new mongoose.Schema({
     relationship: { type: String, required: true },
 });
 
-const ReferneceSchema = new mongoose.Schema({
+const Referencechema = new mongoose.Schema({
     firstName:    { type: String, required: true },
     lastName:     { type: String, required: true },
     middleName:   String,
@@ -21,6 +20,12 @@ const ReferneceSchema = new mongoose.Schema({
 
 
 const EmployeeSchema = new mongoose.Schema({
+    user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        unique: true,
+        sparse: true,
+    },
     userId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
@@ -35,40 +40,46 @@ const EmployeeSchema = new mongoose.Schema({
     preferredName: String,
     profilePicture: String,   // S3's URL
     email:         { type: String, required: true },
-    ssn:           { type: String, required: true },
-    dateOfBirth:   { type: Date, required: true },
+    ssn:           String,
+    dateOfBirth:   Date,
     gender: {
         type: String,
-        enum: ['male', 'female', 'no_answer'],
-        required: true
+        enum: ['male', 'female', 'no_answer', 'other', 'prefer not to say'],
     },
     //===== The Address Section for Employee =====
+    // 📌 统一的地址格式
     address: {
-    building: String,
-    street:   { type: String, required: true },
-    city:     { type: String, required: true },
-    state:    { type: String, required: true },
-    zip:      { type: String, required: true }
-  },
-    //===== The contact Section for Employee =====
-    cellPhone: { type: String, required: true },
-    workPhone: String,
-
-    isUSResident: { type: Boolean },
-
-    residentType: {
-    type: String,
-    enum: ['Green Card', 'Citizen']
-  },
-    visaType: {
-        type: String,
-        enum: ['H1-B', 'L2', 'F1(CPT/OPT)', 'H4', 'Other']
+      building: String,
+      street:   String,
+      city:     String,
+      state:    String,
+      zip:      String
+    },
+    //===== The contact Section for Employee ===== 
+    // 📌 统一的电话格式（替代 cellPhone, phone, workPhone）
+    phone: {
+      mobile: String,
+      work: String,
     },
 
-    // ── The Visa Section for Employee ────────────────────  
-    visaTitle: String,
-    visaStart: Date,
-    visaEnd:   Date,
+    // 📌 工作授权相关字段（统一格式）
+    workAuthorization: {
+        type: String,
+        enum: ['H1-B', 'L2', 'F1', 'OPT', 'F1(CPT/OPT)', 'H4', 'Other']
+    },
+    
+    workAuthorizationDetail: {
+      isCitizenOrPR: String,
+      citizenType: String,
+      workAuthType: String,
+      otherVisaTitle: String,
+      startDate: Date,
+      endDate: Date,
+    },
+
+    // 📌 签证日期（统一到这两个字段）
+    visaStartDate: Date,
+    visaEndDate: Date,
 
     emergencyContacts: [EmergencyContactSchema], // at least 1 emergContact
 
@@ -77,7 +88,7 @@ const EmployeeSchema = new mongoose.Schema({
         enum: ['not_submitted', 'pending', 'approved', 'rejected'],
         default: 'not_submitted'
     },
-    onboardingGeedback: String // Not sure if we want this. 
+    onboardingfeedback: String // Not sure if we want this. 
 }, { timestamps: true }); // auto create CreatedAt and UpdatedAt
 
 module.exports = mongoose.model('Employee', EmployeeSchema);

@@ -1,4 +1,6 @@
 const express = require("express");
+const authMiddleware = require("../middlewares/authMiddleware");
+const requireRole = require("../middlewares/roleMiddleware");
 
 const {
   getAllApplications,
@@ -11,11 +13,13 @@ const {
 
 const router = express.Router();
 
+router.use(authMiddleware, requireRole("hr"));
+
 router.get("/applications", getAllApplications);
 
 router.get("/applications/status/:status", getApplicationsByStatus);
 
-router.get("/employees", getEmployeeProfiles); 
+router.get("/employees", getEmployeeProfiles);
 
 router.get("/employees/:id", getEmployeeProfileById);
 

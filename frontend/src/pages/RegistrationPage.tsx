@@ -4,6 +4,7 @@ import type { AppDispatch, RootState } from "../store/store";
 import { useDispatch, useSelector } from "react-redux";
 import { signup } from "../store/slices/authSlice.ts";
 import { useNavigate, useParams } from "react-router-dom";
+import AuthLayout from "./AuthLayout.tsx";
 
 const { Title, Text } = Typography;
 
@@ -30,7 +31,8 @@ const RegistrationPage = () => {
 
             await dispatch(signup(signUpProps)).unwrap();
 
-            message.success('Registration successful! Please log in.')
+            message.success('Registration successful! Redirecting...');
+            await new Promise(resolve => setTimeout(resolve, 3000));
             navigate('/signin');
 
         } catch (error) {
@@ -39,13 +41,7 @@ const RegistrationPage = () => {
     };
 
     return (
-        <div style={ {
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            minHeight: '100vh',
-            backgroundColor: '#f0f2f5'
-        } }>
+        <AuthLayout>
             <Card
                 style={ {
                     width: 400,
@@ -69,12 +65,12 @@ const RegistrationPage = () => {
                         name="username"
                         label="username"
                         rules={ [
-                            { min: 4, message: 'Username must be at least 3 characters.' },
+                            { min: 4, message: 'Username must be at least 4 characters.' },
                             { required: true, message: 'Please input your username!' }
                         ] }
                     >
                         <Input prefix={ <UserOutlined style={ { color: 'rgba(0,0,0,.25)' } }/> }
-                               placeholder='' size="large"/>
+                               placeholder='username' size="large"/>
                     </Form.Item>
 
                     <Form.Item
@@ -82,7 +78,7 @@ const RegistrationPage = () => {
                         label="password"
                         rules={ [
                             { required: true, message: 'Please input your password!' },
-                            { min: 6, message: 'Password must be at least 6 characters' }
+                            { min: 8, message: 'Password must be at least 8 characters' }
                         ] }
                     >
                         <Input.Password
@@ -126,7 +122,7 @@ const RegistrationPage = () => {
                     </div>
                 </Form>
             </Card>
-        </div>
+        </AuthLayout>
     );
 };
 

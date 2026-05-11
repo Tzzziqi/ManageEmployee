@@ -49,8 +49,8 @@ const HRVisaStatusPage = () => {
 
     const queryString = params.toString();
     const newUrl = queryString
-      ? `${window.location.pathname}?${queryString}`
-      : window.location.pathname;
+        ? `${window.location.pathname}?${queryString}`
+        : window.location.pathname;
 
     window.history.replaceState(null, "", newUrl);
   };
@@ -108,8 +108,8 @@ const HRVisaStatusPage = () => {
       employee.onboarding?.middleName,
       employee.onboarding?.lastName,
     ]
-      .filter(Boolean)
-      .join(" ");
+        .filter(Boolean)
+        .join(" ");
 
     return onboardingName || employee.employee?.username || "Unknown employee";
   };
@@ -131,102 +131,102 @@ const HRVisaStatusPage = () => {
   };
 
   return (
-    <div className="flex min-h-screen bg-[#f7f6f2]">
-      <HRSidebar />
+      <div className="flex min-h-screen bg-[#f7f6f2]">
+        <HRSidebar />
 
-      <main className="flex-1 p-8">
-        <div className="mx-auto max-w-6xl">
-          <div className="mb-6 rounded-xl border bg-white p-6 shadow-sm">
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <div>
-                <h2 className="text-2xl font-bold">Visa Status Management</h2>
-                <p className="mt-2 text-sm text-gray-700">{getResultText()}</p>
-              </div>
+        <main className="flex-1 p-8">
+          <div className="mx-auto max-w-6xl">
+            <div className="mb-6 rounded-xl border bg-white p-6 shadow-sm">
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <div>
+                  <h2 className="text-2xl font-bold">Visa Status Management</h2>
+                  <p className="mt-2 text-sm text-gray-700">{getResultText()}</p>
+                </div>
 
-              <div className="flex flex-wrap items-center gap-3">
-                <input
-                  type="text"
-                  placeholder="Search"
-                  value={search}
-                  onChange={(event) => {
-                    setSearch(event.target.value);
-                    setPage(1);
-                  }}
-                  className="w-64 rounded border px-4 py-2"
-                />
+                <div className="flex flex-wrap items-center gap-3">
+                  <input
+                      type="text"
+                      placeholder="Search"
+                      value={search}
+                      onChange={(event) => {
+                        setSearch(event.target.value);
+                        setPage(1);
+                      }}
+                      className="w-64 rounded border px-4 py-2"
+                  />
 
-                <select
-                  value={view}
-                  onChange={(event) => handleViewChange(event.target.value as VisaView)}
-                  className="rounded border px-4 py-2"
-                >
-                  <option value="in-progress">In Progress</option>
-                  <option value="all">All</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          {loading ? (
-            <div className="rounded border bg-white p-6">Loading...</div>
-          ) : employees.length === 0 ? (
-            <div className="rounded border bg-white p-6">
-              {search.trim() ? `No records found for "${search}".` : "No data"}
-            </div>
-          ) : (
-            <>
-              <div className="space-y-5">
-                {employees.map((employee) => (
-                  <button
-                    key={employee._id}
-                    onClick={() => navigate(`/hr/visa/${employee._id}`)}
-                    className="w-full rounded-xl border bg-white p-6 text-left shadow-sm transition hover:border-blue-300 hover:shadow"
+                  <select
+                      value={view}
+                      onChange={(event) => handleViewChange(event.target.value as VisaView)}
+                      className="rounded border px-4 py-2"
                   >
-                    <div className="grid grid-cols-1 gap-5 md:grid-cols-[1.4fr_1fr_1fr_1fr_0.8fr]">
-                      <div>
-                        <p className="text-xs uppercase text-gray-500">Legal Full Name</p>
-                        <p className="font-semibold">{getLegalFullName(employee)}</p>
-                        <p className="break-all text-sm text-gray-600">
-                          {employee.employee?.email || employee.onboarding?.email || "N/A"}
-                        </p>
-                      </div>
-
-                      <div>
-                        <p className="text-xs uppercase text-gray-500">Title</p>
-                        <p className="font-semibold">{employee.workAuthorization || "N/A"}</p>
-                      </div>
-
-                      <div>
-                        <p className="text-xs uppercase text-gray-500">Start Date</p>
-                        <p className="text-sm text-gray-700">
-                          {formatDate(employee.visaStartDate)}
-                        </p>
-                      </div>
-
-                      <div>
-                        <p className="text-xs uppercase text-gray-500">End Date</p>
-                        <p className="text-sm text-gray-700">
-                          {formatDate(employee.visaEndDate)}
-                        </p>
-                      </div>
-
-                      <div>
-                        <p className="text-xs uppercase text-gray-500">Days Remaining</p>
-                        <p className="font-semibold">
-                          {formatDaysRemaining(employee.daysRemaining)}
-                        </p>
-                      </div>
-                    </div>
-                  </button>
-                ))}
+                    <option value="in-progress">In Progress</option>
+                    <option value="all">All</option>
+                  </select>
+                </div>
               </div>
+            </div>
 
-              <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
-            </>
-          )}
-        </div>
-      </main>
-    </div>
+            {loading ? (
+                <div className="rounded border bg-white p-6">Loading...</div>
+            ) : employees.length === 0 ? (
+                <div className="rounded border bg-white p-6">
+                  {search.trim() ? `No records found for "${search}".` : "No data"}
+                </div>
+            ) : (
+                <>
+                  <div className="space-y-5">
+                    {employees.map((employee) => (
+                        <button
+                            key={employee._id}
+                            onClick={() => navigate(`/hr/visa/${employee._id}`)}
+                            className="w-full rounded-xl border bg-white p-6 text-left shadow-sm transition hover:border-blue-300 hover:shadow"
+                        >
+                          <div className="grid grid-cols-1 gap-5 md:grid-cols-[1.4fr_1fr_1fr_1fr_0.8fr]">
+                            <div>
+                              <p className="text-xs uppercase text-gray-500">Legal Full Name</p>
+                              <p className="font-semibold">{getLegalFullName(employee)}</p>
+                              <p className="break-all text-sm text-gray-600">
+                                {employee.employee?.email || employee.onboarding?.email || "N/A"}
+                              </p>
+                            </div>
+
+                            <div>
+                              <p className="text-xs uppercase text-gray-500">Title</p>
+                              <p className="font-semibold">{employee.workAuthorization || "N/A"}</p>
+                            </div>
+
+                            <div>
+                              <p className="text-xs uppercase text-gray-500">Start Date</p>
+                              <p className="text-sm text-gray-700">
+                                {formatDate(employee.visaStartDate)}
+                              </p>
+                            </div>
+
+                            <div>
+                              <p className="text-xs uppercase text-gray-500">End Date</p>
+                              <p className="text-sm text-gray-700">
+                                {formatDate(employee.visaEndDate)}
+                              </p>
+                            </div>
+
+                            <div>
+                              <p className="text-xs uppercase text-gray-500">Days Remaining</p>
+                              <p className="font-semibold">
+                                {formatDaysRemaining(employee.daysRemaining)}
+                              </p>
+                            </div>
+                          </div>
+                        </button>
+                    ))}
+                  </div>
+
+                  <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+                </>
+            )}
+          </div>
+        </main>
+      </div>
   );
 };
 
